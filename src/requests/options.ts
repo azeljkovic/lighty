@@ -2,9 +2,9 @@ import {parseResponse} from "../parser.js";
 import {HttpMethod} from "../types.js";
 import {logRequestEnd, logRequestStart} from "../logger.js";
 
-export async function options(u: string) {
+export async function options(rawUrl: string) {
   const method: HttpMethod = "OPTIONS";
-  const url = new URL(u);
+  const url = new URL(rawUrl);
 
   logRequestStart(method, url);
 

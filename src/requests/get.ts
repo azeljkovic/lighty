@@ -2,9 +2,12 @@ import {parseResponse} from "../parser.js";
 import {HttpMethod} from "../types.js";
 import {logRequestEnd, logRequestStart} from "../logger.js";
 
-export async function get(u: string) {
+export async function get(rawUrl: string) {
   const method: HttpMethod = "GET";
-  const url = new URL(u);
+  const url = new URL(rawUrl);
+
+  // url.searchParams.set('firstname', 'John');
+  // url.searchParams.set('lastname', 'Smith');
 
   logRequestStart(method, url);
 

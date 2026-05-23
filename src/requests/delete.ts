@@ -4,9 +4,9 @@ import {logRequestEnd, logRequestStart} from "../logger.js";
 
 type JsonBody = unknown;
 
-export async function dlt(u: string, body: JsonBody) {
+export async function dlt(rawUrl: string, body: JsonBody) {
   const method: HttpMethod = "DELETE";
-  const url = new URL(u);
+  const url = new URL(rawUrl);
 
   logRequestStart(method, url);
 

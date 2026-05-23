@@ -5,7 +5,7 @@ import {head} from "./dist/requests/head.js";
 import {options} from './dist/requests/options.js';
 
 const url = 'https://restful-booker.herokuapp.com/booking';
-const patchUrl = 'https://restful-booker.herokuapp.com/booking/53';
+const url2 = 'https://restful-booker.herokuapp.com/booking/52';
 
 const body = {
   "firstname" : "Jim",
@@ -31,7 +31,7 @@ const body2 = {
   "additionalneeds" : "Breakfast"
 }
 
-await get(url);
+await get(url2);
 // await post(url, body);
 // await put(patchUrl, body2);
 // await head(url);
