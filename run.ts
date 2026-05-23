@@ -31,8 +31,8 @@ const body2 = {
   "additionalneeds" : "Breakfast"
 }
 
-// await get(url);
+await get(url);
 // await post(url, body);
 // await put(patchUrl, body2);
 // await head(url);
-await options(url);
+// await options(url);

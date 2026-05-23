@@ -4,12 +4,14 @@ import {logRequestEnd, logRequestStart} from "../logger.js";
 
 type JsonBody = unknown;
 
-export async function dlt(URL: string, body: JsonBody) {
+export async function dlt(u: string, body: JsonBody) {
   const method: HttpMethod = "DELETE";
-  logRequestStart(method, URL);
+  const url = new URL(u);
+
+  logRequestStart(method, url);
 
   try {
-    const getResponse = await fetch(URL, {
+    const getResponse = await fetch(url, {
       method,
       headers: {
         'Accept': 'application/json',
@@ -21,6 +23,6 @@ export async function dlt(URL: string, body: JsonBody) {
     console.error('Error fetching data:', error);
   }
 
-  logRequestEnd(method, URL);
+  logRequestEnd(method, url);
 }
 

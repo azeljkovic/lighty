@@ -2,12 +2,14 @@ import {parseResponse} from "../parser.js";
 import {HttpMethod} from "../types.js";
 import {logRequestEnd, logRequestStart} from "../logger.js";
 
-export async function get(URL: string) {
+export async function get(u: string) {
   const method: HttpMethod = "GET";
-  logRequestStart(method, URL);
+  const url = new URL(u);
+
+  logRequestStart(method, url);
 
   try {
-    const getResponse = await fetch(URL, {
+    const getResponse = await fetch(url, {
       method,
       headers: {
         'Accept': 'application/json',
@@ -18,7 +20,7 @@ export async function get(URL: string) {
     console.error('Error fetching data:', error);
   }
 
-  logRequestEnd(method, URL);
+  logRequestEnd(method, url);
 }
 
 
