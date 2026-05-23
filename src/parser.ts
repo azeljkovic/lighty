@@ -1,8 +1,11 @@
+import {logResponse} from "./logger.js";
+import {Body, BodyParseError} from "./types.js";
+
 export async function parseResponse(response: Response) {
   const text = await response.text();
   const contentType = response.headers.get('content-type') ?? '';
-  let body: unknown = text;
-  let bodyParseError: string | undefined;
+  let body: Body = text;
+  let bodyParseError: BodyParseError;
 
   if (contentType.includes('application/json') && text) {
     try {
@@ -12,17 +15,7 @@ export async function parseResponse(response: Response) {
     }
   }
 
-
-  console.log(`⚡️Status code: ${response.status}`);
-  console.log(`⚡️Status text: ${response.statusText}`);
-  console.log(`⚡️URL: ${response.url}`);
-  console.log(`⚡️Redirected: ${response.redirected}`);
-  console.log(`⚡️Type: ${response.type}`);
-  console.log('⚡️Headers:', Object.fromEntries(response.headers.entries()));
-  console.log('⚡️Body:', body);
-  if(bodyParseError) {
-    console.log('⛔️️Body parse error:', bodyParseError);
-  }
+  logResponse(response, body, bodyParseError);
 
   return;
 }
