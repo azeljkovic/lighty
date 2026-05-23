@@ -9,9 +9,6 @@ export async function head(URL: string) {
   try {
     const getResponse = await fetch(URL, {
       method,
-      // headers: {
-      //   'Accept': 'application/json',
-      // },
     });
     await parseResponse(getResponse);
   } catch (error) {

@@ -2,19 +2,13 @@ import {parseResponse} from "../parser.js";
 import {HttpMethod} from "../types.js";
 import {logRequestEnd, logRequestStart} from "../logger.js";
 
-type JsonBody = unknown;
-
-export async function dlt(URL: string, body: JsonBody) {
-  const method: HttpMethod = "DELETE";
+export async function options(URL: string) {
+  const method: HttpMethod = "OPTIONS";
   logRequestStart(method, URL);
 
   try {
     const getResponse = await fetch(URL, {
       method,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
     });
     await parseResponse(getResponse);
   } catch (error) {
@@ -23,4 +17,5 @@ export async function dlt(URL: string, body: JsonBody) {
 
   logRequestEnd(method, URL);
 }
+
 
