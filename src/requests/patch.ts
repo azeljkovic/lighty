@@ -4,8 +4,8 @@ import {logRequestEnd, logRequestStart} from "../logger.js";
 
 type JsonBody = unknown;
 
-export async function post(URL: string, body: JsonBody) {
-  const method: HttpMethod = "POST";
+export async function patch(URL: string, body: JsonBody) {
+  const method: HttpMethod = "PATCH";
   logRequestStart(method, URL);
 
   try {

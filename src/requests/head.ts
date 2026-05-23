@@ -2,20 +2,16 @@ import {parseResponse} from "../parser.js";
 import {HttpMethod} from "../types.js";
 import {logRequestEnd, logRequestStart} from "../logger.js";
 
-type JsonBody = unknown;
-
-export async function post(URL: string, body: JsonBody) {
-  const method: HttpMethod = "POST";
+export async function head(URL: string) {
+  const method: HttpMethod = "HEAD";
   logRequestStart(method, URL);
 
   try {
     const getResponse = await fetch(URL, {
       method,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+      // headers: {
+      //   'Accept': 'application/json',
+      // },
     });
     await parseResponse(getResponse);
   } catch (error) {
@@ -24,4 +20,5 @@ export async function post(URL: string, body: JsonBody) {
 
   logRequestEnd(method, URL);
 }
+
 
