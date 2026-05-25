@@ -3,9 +3,10 @@ import {post} from "./dist/requests/post.js";
 import {put} from "./dist/requests/put.js";
 import {head} from "./dist/requests/head.js";
 import {options} from './dist/requests/options.js';
+// import {QueryValue} from "./dist/types";
 
 const url = 'https://restful-booker.herokuapp.com/booking';
-const url2 = 'https://restful-booker.herokuapp.com/booking/52';
+const url2 = 'https://restful-booker.herokuapp.com/booking/1';
 
 const body = {
   "firstname" : "Jim",
@@ -31,7 +32,12 @@ const body2 = {
   "additionalneeds" : "Breakfast"
 }
 
-await get(url2);
+const qp = [{}]
+
+
+// await get(url);
+// await get(url2);
+await get(url, {firstname: "Mary", lastname: "Wilson"});
 // await post(url, body);
 // await put(patchUrl, body2);
 // await head(url);

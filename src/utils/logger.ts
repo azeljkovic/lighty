@@ -1,4 +1,4 @@
-import {Body, BodyParseError, HttpMethod} from "./types.js";
+import {Body, BodyParseError, HttpMethod} from "../types.js";
 
 export function logRequestStart(verb: HttpMethod, url: URL) {
   console.log(`\n ℹ️  ${verb} request to ${url} started!\n`);

@@ -1,5 +1,5 @@
 import {logResponse} from "./logger.js";
-import {Body, BodyParseError} from "./types.js";
+import {Body, BodyParseError} from "../types.js";
 
 export async function parseResponse(response: Response) {
   const text = await response.text();

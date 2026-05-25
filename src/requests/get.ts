@@ -1,13 +1,14 @@
-import {parseResponse} from "../parser.js";
-import {HttpMethod} from "../types.js";
-import {logRequestEnd, logRequestStart} from "../logger.js";
+import {parseResponse} from "../utils/parser.js";
+import {HttpMethod, QueryValue} from "../types.js";
+import {logRequestEnd, logRequestStart} from "../utils/logger.js";
+import {buildUrl} from "../utils/queryParamsHandler.js";
 
-export async function get(rawUrl: string) {
+export async function get(rawUrl: string, query?: Record<string, QueryValue>) {
   const method: HttpMethod = "GET";
   const url = new URL(rawUrl);
-
-  // url.searchParams.set('firstname', 'John');
-  // url.searchParams.set('lastname', 'Smith');
+  if (query) {
+    buildUrl(url, query);
+  }
 
   logRequestStart(method, url);
 

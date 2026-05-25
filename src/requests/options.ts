@@ -1,6 +1,6 @@
-import {parseResponse} from "../parser.js";
+import {parseResponse} from "../utils/parser.js";
 import {HttpMethod} from "../types.js";
-import {logRequestEnd, logRequestStart} from "../logger.js";
+import {logRequestEnd, logRequestStart} from "../utils/logger.js";
 
 export async function options(rawUrl: string) {
   const method: HttpMethod = "OPTIONS";

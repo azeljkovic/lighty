@@ -1,10 +1,9 @@
-import {parseResponse} from "../parser.js";
+import {parseResponse} from "../utils/parser.js";
 import {HttpMethod} from "../types.js";
-import {logRequestEnd, logRequestStart} from "../logger.js";
+import {logRequestEnd, logRequestStart} from "../utils/logger.js";
 
-type JsonBody = unknown;
 
-export async function dlt(rawUrl: string, body: JsonBody) {
+export async function dlt(rawUrl: string) {
   const method: HttpMethod = "DELETE";
   const url = new URL(rawUrl);
 
