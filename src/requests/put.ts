@@ -4,7 +4,7 @@ import {logRequestEnd, logRequestStart} from "../utils/logger.js";
 
 type JsonBody = unknown;
 
-export async function put(rawUrl: string, body: JsonBody) {
+export async function putRequest(rawUrl: string, body: JsonBody) {
   const method: HttpMethod = "PUT";
   const url = new URL(rawUrl);
 

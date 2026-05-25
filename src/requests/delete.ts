@@ -3,7 +3,7 @@ import {HttpMethod} from "../types.js";
 import {logRequestEnd, logRequestStart} from "../utils/logger.js";
 
 
-export async function dlt(rawUrl: string) {
+export async function deleteRequest(rawUrl: string) {
   const method: HttpMethod = "DELETE";
   const url = new URL(rawUrl);
 

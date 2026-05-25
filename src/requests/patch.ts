@@ -4,7 +4,7 @@ import {logRequestEnd, logRequestStart} from "../utils/logger.js";
 
 type JsonBody = unknown;
 
-export async function patch(rawUrl: string, body: JsonBody) {
+export async function patchRequest(rawUrl: string, body: JsonBody) {
   const method: HttpMethod = "PATCH";
   const url = new URL(rawUrl);
 

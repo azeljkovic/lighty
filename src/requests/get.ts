@@ -3,7 +3,7 @@ import {HttpMethod, QueryValue} from "../types.js";
 import {logRequestEnd, logRequestStart} from "../utils/logger.js";
 import {buildUrl} from "../utils/queryParamsHandler.js";
 
-export async function get(rawUrl: string, query?: Record<string, QueryValue>) {
+export async function getRequest(rawUrl: string, query?: Record<string, QueryValue>) {
   const method: HttpMethod = "GET";
   const url = new URL(rawUrl);
   if (query) {
