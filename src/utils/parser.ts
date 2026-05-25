@@ -1,5 +1,6 @@
 import {logResponse} from "./logger.js";
 import {Body, BodyParseError} from "../types.js";
+import process from "node:process";
 
 export async function parseResponse(response: Response) {
   const text = await response.text();
@@ -15,7 +16,9 @@ export async function parseResponse(response: Response) {
     }
   }
 
-  logResponse(response, body, bodyParseError);
+  if (process.env.VERBOSE_LOGGING) {
+    logResponse(response, body, bodyParseError);
+  }
 
   return;
 }

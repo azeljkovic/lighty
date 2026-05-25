@@ -4,6 +4,7 @@ import {putRequest} from "./dist/requests/put.js";
 import {headRequest} from "./dist/requests/head.js";
 import {optionsRequest} from "./dist/requests/options.js";
 import {patchRequest} from "./dist/requests/patch.js";
+import {responseIsOk} from "./dist/assertions/assert.js";
 
 const url = 'https://restful-booker.herokuapp.com/booking';
 const url2 = 'https://restful-booker.herokuapp.com/booking/1';
@@ -35,7 +36,9 @@ const body2 = {
 const qp = [{}]
 
 
-await getRequest(url);
+// await getRequest(url);
+const rs = await getRequest(url);
+responseIsOk(rs);
 // await getRequest(url2);
 // await getRequest(url, {firstname: "Mary", lastname: "Wilson"});
 // await postRequest(url, body2);

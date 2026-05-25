@@ -18,7 +18,8 @@
   "scripts": {
     "build": "tsc",
     "prepack": "npm run build",
-    "test": "pnpm run build && node --test dist/index.test.js"
+    "test": "pnpm run build && node --test",
+    "test:verbose": "pnpm run build && VERBOSE_LOGGING=true node --test"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
