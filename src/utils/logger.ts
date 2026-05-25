@@ -5,11 +5,16 @@ export function logRequestStart(verb: HttpMethod, url: URL) {
 }
 
 export function logRequestEnd(verb: HttpMethod, url: URL) {
-  console.log(`\n ✅ ${verb} request to ${url} completed!\n`);
+  console.log(`\n 🎯 ${verb} request to ${url} completed!\n`);
 }
 
 export function logResponse(response: Response, body: Body, bodyParseError: BodyParseError) {
-  console.log(`⚡️Status code: ${response.status}`);
+  if(response.ok){
+    console.log(`⚡️Response ok: ✅ - status code ${response.status}`);
+  } else {
+    console.log(`⚡️Response ok: ❌ - status code ${response.status}`);
+  }
+  // console.log(`⚡️Status code: ${response.status}`);
   console.log(`⚡️Status text: ${response.statusText}`);
   console.log(`⚡️URL: ${response.url}`);
   console.log(`⚡️Redirected: ${response.redirected}`);
