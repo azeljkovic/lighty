@@ -2,7 +2,6 @@ import {parseResponse} from "../utils/parser.js";
 import {HttpMethod, QueryValue} from "../types.js";
 import {logRequestEnd, logRequestStart} from "../utils/logger.js";
 import {buildUrl} from "../utils/queryParamsHandler.js";
-import * as process from "node:process";
 
 export async function getRequest(rawUrl: string, query?: Record<string, QueryValue>) {
   const method: HttpMethod = "GET";
@@ -11,10 +10,7 @@ export async function getRequest(rawUrl: string, query?: Record<string, QueryVal
     buildUrl(url, query);
   }
 
-  if (process.env.VERBOSE_LOGGING) {
-    logRequestStart(method, url);
-  }
-
+  logRequestStart(method, url);
 
   try {
     const getResponse = await fetch(url, {
@@ -29,9 +25,7 @@ export async function getRequest(rawUrl: string, query?: Record<string, QueryVal
     console.error('Error fetching data:', error);
   }
 
-  if (process.env.VERBOSE_LOGGING) {
-    logRequestEnd(method, url);
-  }
+  logRequestEnd(method, url);
 }
 
 
