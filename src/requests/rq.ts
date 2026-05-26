@@ -1,6 +1,7 @@
 import {logRequestEnd, logRequestStart, logResponse} from "../utils/logger.js";
+import type {HttpMethod} from "../types.js";
 
-type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
+type BodylessMethodConfig = Omit<MethodConfig, "body">;
 
 
 export interface RequestConfig<TBody = unknown> {
@@ -62,6 +63,83 @@ export async function request<TResponse = unknown, TBody = unknown>(
   logRequestEnd(config.method, url);
 
   return await parseResponseBody<TResponse>(response);
+}
+
+export function getRequest<TResponse = unknown>(
+  url: string,
+  config: BodylessMethodConfig = {}
+): Promise<TResponse> {
+  return request<TResponse>({
+    ...config,
+    method: "GET",
+    url,
+  });
+}
+
+export function postRequest<TResponse = unknown, TBody = unknown>(
+  url: string,
+  config: MethodConfig<TBody> = {}
+): Promise<TResponse> {
+  return request<TResponse, TBody>({
+    ...config,
+    method: "POST",
+    url,
+  });
+}
+
+export function putRequest<TResponse = unknown, TBody = unknown>(
+  url: string,
+  config: MethodConfig<TBody> = {}
+): Promise<TResponse> {
+  return request<TResponse, TBody>({
+    ...config,
+    method: "PUT",
+    url,
+  });
+}
+
+export function patchRequest<TResponse = unknown, TBody = unknown>(
+  url: string,
+  config: MethodConfig<TBody> = {}
+): Promise<TResponse> {
+  return request<TResponse, TBody>({
+    ...config,
+    method: "PATCH",
+    url,
+  });
+}
+
+export function deleteRequest<TResponse = unknown>(
+  url: string,
+  config: BodylessMethodConfig = {}
+): Promise<TResponse> {
+  return request<TResponse>({
+    ...config,
+    method: "DELETE",
+    url,
+  });
+}
+
+export function headRequest<TResponse = unknown>(
+  url: string,
+  config: BodylessMethodConfig = {}
+): Promise<TResponse> {
+  return request<TResponse>({
+    ...config,
+    method: "HEAD",
+    url,
+  });
+}
+
+export function optionsRequest<TResponse = unknown>(
+  url: string,
+  config: BodylessMethodConfig = {}
+): Promise<TResponse> {
+  return request<TResponse>({
+    ...config,
+    method: "OPTIONS",
+    url,
+  });
 }
 
 async function parseResponseBody<TResponse>(response: Response): Promise<TResponse> {

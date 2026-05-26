@@ -1,5 +1,4 @@
-import {request} from "./dist/requests/rq.js";
-import type {RequestConfig} from "./src/requests/rq.js";
+import {postRequest, type MethodConfig, type RequestConfig} from "./dist/index.js";
 
 const url = 'https://restful-booker.herokuapp.com/booking';
 const bookingUrl = 'https://restful-booker.herokuapp.com/booking/2';
@@ -51,6 +50,10 @@ const post: RequestConfig = {
   body: booking,
 }
 
+const post2: MethodConfig = {
+  body: booking,
+}
+
 const put: RequestConfig = {
   method: "PUT",
   url: bookingUrl,
@@ -81,4 +84,7 @@ const dlt: RequestConfig = {
 }
 
 
-request(post);
+// request(post);
+
+// getRequest(url);
+await postRequest(url, post2);
