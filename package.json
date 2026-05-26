@@ -19,8 +19,9 @@
     "build": "tsc",
     "prepack": "npm run build",
     "run": "pnpm run build && VERBOSE_LOGGING=true node run.ts",
-    "test": "pnpm run build && node --test",
-    "test:verbose": "pnpm run build && VERBOSE_LOGGING=true node --test"
+    "test": "pnpm run build && node --test test/unit.test.js",
+    "test:e2e": "pnpm run build && node --test test/e2e.test.js",
+    "test:e2e:verbose": "pnpm run build && VERBOSE_LOGGING=true node --test test/e2e.test.js"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

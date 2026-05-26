@@ -1,4 +1,4 @@
-import {postRequest, type MethodConfig, type RequestConfig} from "./dist/index.js";
+import {getRequest, postRequest, type MethodConfig, type RequestConfig} from "./dist/index.js";
 
 const url = 'https://restful-booker.herokuapp.com/booking';
 const bookingUrl = 'https://restful-booker.herokuapp.com/booking/2';
@@ -86,5 +86,5 @@ const dlt: RequestConfig = {
 
 // request(post);
 
-// getRequest(url);
-await postRequest(url, post2);
+await getRequest(url);
+// await postRequest(url, post2);
