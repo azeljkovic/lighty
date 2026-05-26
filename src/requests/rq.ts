@@ -3,6 +3,10 @@ import type {HttpMethod} from "../types.js";
 
 type BodylessMethodConfig = Omit<MethodConfig, "body">;
 
+export interface RequestResult<TResponse = unknown> {
+  response: Response;
+  body: TResponse;
+}
 
 export interface RequestConfig<TBody = unknown> {
   method: HttpMethod;
@@ -12,6 +16,7 @@ export interface RequestConfig<TBody = unknown> {
   body?: TBody;
   signal?: AbortSignal;
   timeoutMs?: number;
+  throwOnHttpError?: boolean;
 }
 
 export interface MethodConfig<TBody = unknown> {
@@ -20,11 +25,12 @@ export interface MethodConfig<TBody = unknown> {
   body?: TBody;
   signal?: AbortSignal;
   timeoutMs?: number;
+  throwOnHttpError?: boolean;
 }
 
 export async function request<TResponse = unknown, TBody = unknown>(
   config: RequestConfig<TBody>
-): Promise<TResponse> {
+): Promise<RequestResult<TResponse>> {
   const url = new URL(config.url);
 
   if (config.params) {
@@ -56,19 +62,22 @@ export async function request<TResponse = unknown, TBody = unknown>(
 
   await logResponse(response);
 
-  if (!response.ok) {
+  if (!response.ok && config.throwOnHttpError !== false) {
     throw new Error(`Request failed with status ${response.status}`);
   }
 
   logRequestEnd(config.method, url);
 
-  return await parseResponseBody<TResponse>(response);
+  return {
+    response,
+    body: await parseResponseBody<TResponse>(response),
+  };
 }
 
 export function getRequest<TResponse = unknown>(
   url: string,
   config: BodylessMethodConfig = {}
-): Promise<TResponse> {
+): Promise<RequestResult<TResponse>> {
   return request<TResponse>({
     ...config,
     method: "GET",
@@ -79,7 +88,7 @@ export function getRequest<TResponse = unknown>(
 export function postRequest<TResponse = unknown, TBody = unknown>(
   url: string,
   config: MethodConfig<TBody> = {}
-): Promise<TResponse> {
+): Promise<RequestResult<TResponse>> {
   return request<TResponse, TBody>({
     ...config,
     method: "POST",
@@ -90,7 +99,7 @@ export function postRequest<TResponse = unknown, TBody = unknown>(
 export function putRequest<TResponse = unknown, TBody = unknown>(
   url: string,
   config: MethodConfig<TBody> = {}
-): Promise<TResponse> {
+): Promise<RequestResult<TResponse>> {
   return request<TResponse, TBody>({
     ...config,
     method: "PUT",
@@ -101,7 +110,7 @@ export function putRequest<TResponse = unknown, TBody = unknown>(
 export function patchRequest<TResponse = unknown, TBody = unknown>(
   url: string,
   config: MethodConfig<TBody> = {}
-): Promise<TResponse> {
+): Promise<RequestResult<TResponse>> {
   return request<TResponse, TBody>({
     ...config,
     method: "PATCH",
@@ -112,7 +121,7 @@ export function patchRequest<TResponse = unknown, TBody = unknown>(
 export function deleteRequest<TResponse = unknown>(
   url: string,
   config: BodylessMethodConfig = {}
-): Promise<TResponse> {
+): Promise<RequestResult<TResponse>> {
   return request<TResponse>({
     ...config,
     method: "DELETE",
@@ -123,7 +132,7 @@ export function deleteRequest<TResponse = unknown>(
 export function headRequest<TResponse = unknown>(
   url: string,
   config: BodylessMethodConfig = {}
-): Promise<TResponse> {
+): Promise<RequestResult<TResponse>> {
   return request<TResponse>({
     ...config,
     method: "HEAD",
@@ -134,7 +143,7 @@ export function headRequest<TResponse = unknown>(
 export function optionsRequest<TResponse = unknown>(
   url: string,
   config: BodylessMethodConfig = {}
-): Promise<TResponse> {
+): Promise<RequestResult<TResponse>> {
   return request<TResponse>({
     ...config,
     method: "OPTIONS",
