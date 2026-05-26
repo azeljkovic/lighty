@@ -18,6 +18,7 @@
   "scripts": {
     "build": "tsc",
     "prepack": "npm run build",
+    "run": "pnpm run build && VERBOSE_LOGGING=true node run.ts",
     "test": "pnpm run build && node --test",
     "test:verbose": "pnpm run build && VERBOSE_LOGGING=true node --test"
   },

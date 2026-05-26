@@ -1,4 +1,4 @@
-import {Body, BodyParseError, HttpMethod} from "../types.js";
+import {HttpMethod} from "../types.js";
 import process from "node:process";
 
 export function logRequestStart(verb: HttpMethod, url: URL) {
@@ -13,24 +13,25 @@ export function logRequestEnd(verb: HttpMethod, url: URL) {
   }
 }
 
-export function logResponse(response: Response, body: Body, bodyParseError: BodyParseError) {
+export async function logResponse(response: Response) {
   if (process.env.VERBOSE_LOGGING) {
     if (response.ok) {
       console.log(`⚡️Response ok: ✅ - status code ${response.status}`);
     } else {
       console.log(`⚡️Response ok: ❌ - status code ${response.status}`);
     }
-    // console.log(`⚡️Status code: ${response.status}`);
     console.log(`⚡️Status text: ${response.statusText}`);
     console.log(`⚡️URL: ${response.url}`);
     console.log(`⚡️Redirected: ${response.redirected}`);
     console.log(`⚡️Type: ${response.type}`);
     console.log('⚡️Headers:', Object.fromEntries(response.headers.entries()));
-    if (body) {
-      console.log('⚡️Body:', body);
-    }
-    if (bodyParseError) {
-      console.log('⛔️️Body parse error:', bodyParseError);
+    // console.log('⚡️Body:', JSON.stringify(response.body));
+    const text = await response.clone().text();
+
+    try {
+      console.log("⚡️Body:", JSON.parse(text));
+    } catch {
+      console.log("⚡️Body:", text);
     }
   }
 }
