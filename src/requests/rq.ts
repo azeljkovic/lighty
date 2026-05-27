@@ -8,6 +8,32 @@ export interface RequestResult<TResponse = unknown> {
   body: TResponse;
 }
 
+export interface HttpRequestErrorOptions<TBody = unknown> {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: TBody;
+  url: string;
+}
+
+export class HttpRequestError<TBody = unknown> extends Error {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: TBody;
+  url: string;
+
+  constructor(options: HttpRequestErrorOptions<TBody>) {
+    super(`Request failed with status ${options.status}`);
+    this.name = "HttpRequestError";
+    this.status = options.status;
+    this.statusText = options.statusText;
+    this.headers = options.headers;
+    this.body = options.body;
+    this.url = options.url;
+  }
+}
+
 export interface RequestConfig<TBody = unknown> {
   method: HttpMethod;
   url: string;
@@ -62,15 +88,23 @@ export async function request<TResponse = unknown, TBody = unknown>(
 
   await logResponse(response);
 
+  const responseBody = await parseResponseBody<TResponse>(response);
+
   if (!response.ok && config.throwOnHttpError !== false) {
-    throw new Error(`Request failed with status ${response.status}`);
+    throw new HttpRequestError<TResponse>({
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      body: responseBody,
+      url: response.url || url.toString(),
+    });
   }
 
   logRequestEnd(config.method, url);
 
   return {
     response,
-    body: await parseResponseBody<TResponse>(response),
+    body: responseBody,
   };
 }
 

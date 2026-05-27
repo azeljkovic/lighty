@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {describe, it} from "node:test";
-import {lightyAssert, request} from "../dist/index.js";
+import {HttpRequestError, lightyAssert, request} from "../dist/index.js";
 
 describe("namespace export", () => {
   it("exposes helpers through lighty", () => {
@@ -11,6 +11,73 @@ describe("namespace export", () => {
 });
 
 describe("requests", () => {
+  it("throws HttpRequestError with parsed response details for HTTP errors", async () => {
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async () => new Response(
+      JSON.stringify({code: "invalid_request", message: "Email is required"}),
+      {
+        status: 422,
+        statusText: "Unprocessable Entity",
+        headers: {
+          "content-type": "application/json",
+          "x-request-id": "request-123",
+        },
+      }
+    );
+
+    try {
+      await assert.rejects(
+        request({
+          method: "POST",
+          url: "https://example.test/users",
+          params: {source: "unit"},
+          body: {name: "Ada"},
+        }),
+        error => {
+          assert.ok(error instanceof HttpRequestError);
+          assert.equal(error.name, "HttpRequestError");
+          assert.equal(error.message, "Request failed with status 422");
+          assert.equal(error.status, 422);
+          assert.equal(error.statusText, "Unprocessable Entity");
+          assert.equal(error.headers["content-type"], "application/json");
+          assert.equal(error.headers["x-request-id"], "request-123");
+          assert.deepEqual(error.body, {code: "invalid_request", message: "Email is required"});
+          assert.equal(error.url, "https://example.test/users?source=unit");
+
+          return true;
+        }
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("returns parsed response details for HTTP errors when throwOnHttpError is false", async () => {
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async () => new Response(
+      JSON.stringify({code: "invalid_request"}),
+      {
+        status: 400,
+        headers: {"content-type": "application/json"},
+      }
+    );
+
+    try {
+      const result = await request({
+        method: "GET",
+        url: "https://example.test/users",
+        throwOnHttpError: false,
+      });
+
+      assert.equal(result.response.status, 400);
+      assert.deepEqual(result.body, {code: "invalid_request"});
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("aborts fetch when timeoutMs elapses", async () => {
     const originalFetch = globalThis.fetch;
     let observedSignal;

@@ -2,6 +2,7 @@ import {
   deleteRequest,
   getRequest,
   headRequest,
+  HttpRequestError,
   optionsRequest,
   patchRequest,
   postRequest,
@@ -40,6 +41,7 @@ export {
   deleteRequest,
   getRequest,
   headRequest,
+  HttpRequestError,
   optionsRequest,
   patchRequest,
   postRequest,
@@ -83,6 +85,7 @@ export const lightyRequest = {
   deleteRequest,
   getRequest,
   headRequest,
+  HttpRequestError,
   optionsRequest,
   patchRequest,
   postRequest,
@@ -118,4 +121,5 @@ export const lightyAssert = {
 
 
 export type {MethodConfig, RequestConfig, RequestResult} from "./requests/rq.js";
+export type {HttpRequestErrorOptions} from "./requests/rq.js";
 export type {Body, BodyParseError, HttpMethod} from "./types.js";
