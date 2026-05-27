@@ -1,4 +1,5 @@
 import {
+  createClient,
   deleteRequest,
   getRequest,
   headRequest,
@@ -44,6 +45,7 @@ import {
 } from "./assertions/response.js";
 
 export {
+  createClient,
   deleteRequest,
   getRequest,
   headRequest,
@@ -84,6 +86,7 @@ export {
 };
 
 export const lightyRequest = {
+  createClient,
   deleteRequest,
   getRequest,
   headRequest,
@@ -123,6 +126,8 @@ export const lightyAssert = {
 };
 
 export type {
+  Client,
+  ClientConfig,
   InvalidJsonResponseErrorOptions,
   MethodConfig,
   RequestConfig,

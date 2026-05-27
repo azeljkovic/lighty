@@ -103,6 +103,121 @@ export interface MethodConfig<TBody = unknown> {
   logger?: RequestLoggerConfig;
 }
 
+export interface ClientConfig {
+  baseUrl?: string;
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+  throwOnHttpError?: boolean;
+  logger?: RequestLoggerConfig;
+}
+
+export interface Client {
+  request<TResponse = unknown, TBody = unknown>(
+    config: RequestConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+  getRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+  postRequest<TResponse = unknown, TBody = unknown>(
+    url: string,
+    config?: MethodConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+  putRequest<TResponse = unknown, TBody = unknown>(
+    url: string,
+    config?: MethodConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+  patchRequest<TResponse = unknown, TBody = unknown>(
+    url: string,
+    config?: MethodConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+  deleteRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+  headRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+  optionsRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+}
+
+export function createClient(config: ClientConfig = {}): Client {
+  const clientRequest = <TResponse = unknown, TBody = unknown>(
+    requestConfig: RequestConfig<TBody>,
+  ) => request<TResponse, TBody>(mergeClientConfig(config, requestConfig));
+
+  return {
+    request: clientRequest,
+    getRequest: <TResponse = unknown>(
+      url: string,
+      requestConfig: BodylessMethodConfig = {},
+    ) =>
+      clientRequest<TResponse>({
+        ...requestConfig,
+        method: "GET",
+        url,
+      }),
+    postRequest: <TResponse = unknown, TBody = unknown>(
+      url: string,
+      requestConfig: MethodConfig<TBody> = {},
+    ) =>
+      clientRequest<TResponse, TBody>({
+        ...requestConfig,
+        method: "POST",
+        url,
+      }),
+    putRequest: <TResponse = unknown, TBody = unknown>(
+      url: string,
+      requestConfig: MethodConfig<TBody> = {},
+    ) =>
+      clientRequest<TResponse, TBody>({
+        ...requestConfig,
+        method: "PUT",
+        url,
+      }),
+    patchRequest: <TResponse = unknown, TBody = unknown>(
+      url: string,
+      requestConfig: MethodConfig<TBody> = {},
+    ) =>
+      clientRequest<TResponse, TBody>({
+        ...requestConfig,
+        method: "PATCH",
+        url,
+      }),
+    deleteRequest: <TResponse = unknown>(
+      url: string,
+      requestConfig: BodylessMethodConfig = {},
+    ) =>
+      clientRequest<TResponse>({
+        ...requestConfig,
+        method: "DELETE",
+        url,
+      }),
+    headRequest: <TResponse = unknown>(
+      url: string,
+      requestConfig: BodylessMethodConfig = {},
+    ) =>
+      clientRequest<TResponse>({
+        ...requestConfig,
+        method: "HEAD",
+        url,
+      }),
+    optionsRequest: <TResponse = unknown>(
+      url: string,
+      requestConfig: BodylessMethodConfig = {},
+    ) =>
+      clientRequest<TResponse>({
+        ...requestConfig,
+        method: "OPTIONS",
+        url,
+      }),
+  };
+}
+
 export async function request<TResponse = unknown, TBody = unknown>(
   config: RequestConfig<TBody>,
 ): Promise<RequestResult<TResponse>> {
@@ -148,10 +263,7 @@ export async function request<TResponse = unknown, TBody = unknown>(
       signal: createRequestSignal(config.signal, config.timeoutMs),
     });
 
-    responseBody = await parseResponseBody<TResponse>(
-      response,
-      url.toString(),
-    );
+    responseBody = await parseResponseBody<TResponse>(response, url.toString());
 
     await logResponse(config.logger, {
       method: config.method,
@@ -318,4 +430,37 @@ function createRequestSignal(
   }
 
   return AbortSignal.any([signal, timeoutSignal]);
+}
+
+function mergeClientConfig<TBody>(
+  clientConfig: ClientConfig,
+  requestConfig: RequestConfig<TBody>,
+): RequestConfig<TBody> {
+  return {
+    ...requestConfig,
+    url: resolveClientUrl(requestConfig.url, clientConfig.baseUrl),
+    headers: {
+      ...clientConfig.headers,
+      ...requestConfig.headers,
+    },
+    timeoutMs: requestConfig.timeoutMs ?? clientConfig.timeoutMs,
+    throwOnHttpError:
+      requestConfig.throwOnHttpError ?? clientConfig.throwOnHttpError,
+    logger: requestConfig.logger ?? clientConfig.logger,
+  };
+}
+
+function resolveClientUrl(url: string, baseUrl: string | undefined) {
+  if (!baseUrl || isAbsoluteUrl(url)) {
+    return url;
+  }
+
+  const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  const normalizedUrl = url.replace(/^\/+/, "");
+
+  return new URL(normalizedUrl, normalizedBaseUrl).toString();
+}
+
+function isAbsoluteUrl(url: string) {
+  return /^[a-z][a-z\d+\-.]*:/i.test(url);
 }

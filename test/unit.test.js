@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  createClient,
   HttpRequestError,
   InvalidJsonResponseError,
   lightyAssert,
@@ -16,6 +17,59 @@ describe("namespace export", () => {
 });
 
 describe("requests", () => {
+  it("creates a client with shared request defaults", async () => {
+    const originalFetch = globalThis.fetch;
+    const calls = [];
+
+    globalThis.fetch = async (url, init) => {
+      calls.push({ url: url.toString(), init });
+
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 409,
+        statusText: "Conflict",
+        headers: { "content-type": "application/json" },
+      });
+    };
+
+    try {
+      const client = createClient({
+        baseUrl: "https://api.example.test/v1",
+        headers: {
+          Authorization: "Bearer client-token",
+          "x-client": "client",
+        },
+        timeoutMs: 1000,
+        throwOnHttpError: false,
+        logger: false,
+      });
+
+      const result = await client.postRequest("/users", {
+        params: { active: true },
+        headers: {
+          Authorization: "Bearer request-token",
+          "x-request": "request",
+        },
+        body: { name: "Ada" },
+      });
+
+      assert.equal(result.response.status, 409);
+      assert.deepEqual(result.body, { ok: true });
+
+      assert.equal(
+        calls[0].url,
+        "https://api.example.test/v1/users?active=true",
+      );
+      assert.equal(calls[0].init.method, "POST");
+      assert.equal(calls[0].init.headers.Authorization, "Bearer request-token");
+      assert.equal(calls[0].init.headers["x-client"], "client");
+      assert.equal(calls[0].init.headers["x-request"], "request");
+      assert.equal(calls[0].init.body, JSON.stringify({ name: "Ada" }));
+      assert.ok(calls[0].init.signal instanceof AbortSignal);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("throws HttpRequestError with parsed response details for HTTP errors", async () => {
     const originalFetch = globalThis.fetch;
 
