@@ -33,6 +33,15 @@ export interface HttpRequestErrorOptions<TBody = unknown> {
   url: string;
 }
 
+export interface InvalidJsonResponseErrorOptions {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: string;
+  url: string;
+  cause: unknown;
+}
+
 export class HttpRequestError<TBody = unknown> extends Error {
   status: number;
   statusText: string;
@@ -43,6 +52,27 @@ export class HttpRequestError<TBody = unknown> extends Error {
   constructor(options: HttpRequestErrorOptions<TBody>) {
     super(`Request failed with status ${options.status}`);
     this.name = "HttpRequestError";
+    this.status = options.status;
+    this.statusText = options.statusText;
+    this.headers = options.headers;
+    this.body = options.body;
+    this.url = options.url;
+  }
+}
+
+export class InvalidJsonResponseError extends Error {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: string;
+  url: string;
+
+  constructor(options: InvalidJsonResponseErrorOptions) {
+    super(
+      `Failed to parse JSON response from ${options.url} (status ${options.status})`,
+      { cause: options.cause },
+    );
+    this.name = "InvalidJsonResponseError";
     this.status = options.status;
     this.statusText = options.statusText;
     this.headers = options.headers;
@@ -118,7 +148,10 @@ export async function request<TResponse = unknown, TBody = unknown>(
       signal: createRequestSignal(config.signal, config.timeoutMs),
     });
 
-    responseBody = await parseResponseBody<TResponse>(response);
+    responseBody = await parseResponseBody<TResponse>(
+      response,
+      url.toString(),
+    );
 
     await logResponse(config.logger, {
       method: config.method,
@@ -242,6 +275,7 @@ export function optionsRequest<TResponse = unknown>(
 
 async function parseResponseBody<TResponse>(
   response: Response,
+  requestUrl: string,
 ): Promise<TResponse> {
   const text = await response.text();
 
@@ -252,7 +286,18 @@ async function parseResponseBody<TResponse>(
   const contentType = response.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
-    return JSON.parse(text) as TResponse;
+    try {
+      return JSON.parse(text) as TResponse;
+    } catch (error) {
+      throw new InvalidJsonResponseError({
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        body: text,
+        url: response.url || requestUrl,
+        cause: error,
+      });
+    }
   }
 
   return text as TResponse;

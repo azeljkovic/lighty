@@ -3,6 +3,7 @@ import {
   getRequest,
   headRequest,
   HttpRequestError,
+  InvalidJsonResponseError,
   optionsRequest,
   patchRequest,
   postRequest,
@@ -47,6 +48,7 @@ export {
   getRequest,
   headRequest,
   HttpRequestError,
+  InvalidJsonResponseError,
   optionsRequest,
   patchRequest,
   postRequest,
@@ -86,6 +88,7 @@ export const lightyRequest = {
   getRequest,
   headRequest,
   HttpRequestError,
+  InvalidJsonResponseError,
   optionsRequest,
   patchRequest,
   postRequest,
@@ -120,6 +123,7 @@ export const lightyAssert = {
 };
 
 export type {
+  InvalidJsonResponseErrorOptions,
   MethodConfig,
   RequestConfig,
   RequestResult,

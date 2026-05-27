@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { HttpRequestError, lightyAssert, request } from "../dist/index.js";
+import {
+  HttpRequestError,
+  InvalidJsonResponseError,
+  lightyAssert,
+  request,
+} from "../dist/index.js";
 
 describe("namespace export", () => {
   it("exposes helpers through lighty", () => {
@@ -80,6 +85,50 @@ describe("requests", () => {
 
       assert.equal(result.response.status, 400);
       assert.deepEqual(result.body, { code: "invalid_request" });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("throws InvalidJsonResponseError with response details for invalid JSON", async () => {
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async () =>
+      new Response("{invalid-json", {
+        status: 200,
+        statusText: "OK",
+        headers: {
+          "content-type": "application/json",
+          "x-request-id": "request-123",
+        },
+      });
+
+    try {
+      await assert.rejects(
+        request({
+          method: "GET",
+          url: "https://example.test/users",
+          params: { source: "unit" },
+          logger: false,
+        }),
+        (error) => {
+          assert.ok(error instanceof InvalidJsonResponseError);
+          assert.equal(error.name, "InvalidJsonResponseError");
+          assert.equal(
+            error.message,
+            "Failed to parse JSON response from https://example.test/users?source=unit (status 200)",
+          );
+          assert.equal(error.status, 200);
+          assert.equal(error.statusText, "OK");
+          assert.equal(error.headers["content-type"], "application/json");
+          assert.equal(error.headers["x-request-id"], "request-123");
+          assert.equal(error.body, "{invalid-json");
+          assert.equal(error.url, "https://example.test/users?source=unit");
+          assert.ok(error.cause instanceof SyntaxError);
+
+          return true;
+        },
+      );
     } finally {
       globalThis.fetch = originalFetch;
     }
