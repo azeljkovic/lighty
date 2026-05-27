@@ -12,11 +12,11 @@
     }
   },
   "files": [
-    "dist/index.js",
-    "dist/index.d.ts"
+    "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "clean": "node --eval \"import('node:fs').then(fs => fs.rmSync('dist', { recursive: true, force: true }))\"",
+    "build": "npm run clean && tsc",
     "prepack": "npm run build",
     "run": "pnpm run build && VERBOSE_LOGGING=true node run.ts",
     "test": "pnpm run build && node --test test/unit.test.js",
