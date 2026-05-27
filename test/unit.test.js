@@ -52,8 +52,11 @@ describe("requests", () => {
         body: { name: "Ada" },
       });
 
-      assert.equal(result.response.status, 409);
-      assert.deepEqual(result.body, { ok: true });
+      assert.equal(result.status, 409);
+      assert.equal(result.ok, false);
+      assert.equal(result.headers["content-type"], "application/json");
+      assert.deepEqual(result.data, { ok: true });
+      assert.ok(result.response instanceof Response);
 
       assert.equal(
         calls[0].url,
@@ -146,8 +149,10 @@ describe("requests", () => {
         logger: false,
       });
 
-      assert.equal(result.response.status, 400);
-      assert.deepEqual(result.body, { code: "invalid_request" });
+      assert.equal(result.status, 400);
+      assert.equal(result.ok, false);
+      assert.equal(result.headers["content-type"], "application/json");
+      assert.deepEqual(result.data, { code: "invalid_request" });
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -170,7 +175,7 @@ describe("requests", () => {
             responseType: "json",
             logger: false,
           })
-        ).body,
+        ).data,
         { ok: true },
       );
 
@@ -187,7 +192,7 @@ describe("requests", () => {
             responseType: "text",
             logger: false,
           })
-        ).body,
+        ).data,
         JSON.stringify({ ok: true }),
       );
 
@@ -201,8 +206,8 @@ describe("requests", () => {
         responseType: "arrayBuffer",
         logger: false,
       });
-      assert.ok(arrayBufferResult.body instanceof ArrayBuffer);
-      assert.equal(new TextDecoder().decode(arrayBufferResult.body), "binary");
+      assert.ok(arrayBufferResult.data instanceof ArrayBuffer);
+      assert.equal(new TextDecoder().decode(arrayBufferResult.data), "binary");
 
       globalThis.fetch = async () =>
         new Response("file", {
@@ -215,9 +220,9 @@ describe("requests", () => {
         responseType: "blob",
         logger: false,
       });
-      assert.ok(blobResult.body instanceof Blob);
-      assert.equal(await blobResult.body.text(), "file");
-      assert.equal(blobResult.body.type, "text/plain");
+      assert.ok(blobResult.data instanceof Blob);
+      assert.equal(await blobResult.data.text(), "file");
+      assert.equal(blobResult.data.type, "text/plain");
 
       globalThis.fetch = async () =>
         new Response("streamed", {
@@ -229,8 +234,8 @@ describe("requests", () => {
         responseType: "stream",
         logger: false,
       });
-      assert.ok(streamResult.body instanceof ReadableStream);
-      assert.equal(await new Response(streamResult.body).text(), "streamed");
+      assert.ok(streamResult.data instanceof ReadableStream);
+      assert.equal(await new Response(streamResult.data).text(), "streamed");
 
       globalThis.fetch = async () =>
         new Response("ignored", {
@@ -242,7 +247,7 @@ describe("requests", () => {
         responseType: "none",
         logger: false,
       });
-      assert.equal(noneResult.body, undefined);
+      assert.equal(noneResult.data, undefined);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -265,12 +270,12 @@ describe("requests", () => {
       });
 
       const defaultResult = await client.getRequest("/default");
-      assert.equal(defaultResult.body, JSON.stringify({ ok: true }));
+      assert.equal(defaultResult.data, JSON.stringify({ ok: true }));
 
       const overrideResult = await client.getRequest("/override", {
         responseType: "json",
       });
-      assert.deepEqual(overrideResult.body, { ok: true });
+      assert.deepEqual(overrideResult.data, { ok: true });
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -386,7 +391,7 @@ describe("requests", () => {
         },
       });
 
-      assert.deepEqual(result.body, {
+      assert.deepEqual(result.data, {
         token: "response-token",
         profile: {
           name: "Ada",
@@ -823,9 +828,14 @@ describe("body assertions", () => {
 });
 
 function makeResult(status, body, headers = {}) {
+  const response = makeResponse(status, headers);
+
   return {
-    response: makeResponse(status, headers),
-    body,
+    status,
+    ok: response.ok,
+    headers,
+    data: body,
+    response,
   };
 }
 

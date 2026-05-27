@@ -8,7 +8,7 @@ export function getResponse(response: ResponseAssertionTarget): Response {
 }
 
 export function getBody<TBody>(body: BodyAssertionTarget<TBody>): TBody {
-  return isRequestResult(body) ? body.body : body;
+  return isRequestResult(body) ? body.data : body;
 }
 
 function isRequestResult<TBody>(
@@ -18,6 +18,6 @@ function isRequestResult<TBody>(
     typeof value === "object" &&
     value !== null &&
     "response" in value &&
-    "body" in value
+    "data" in value
   );
 }

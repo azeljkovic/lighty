@@ -28,8 +28,11 @@ export type RequestResponseType =
   | "none";
 
 export interface RequestResult<TResponse = unknown> {
+  status: number;
+  ok: boolean;
+  headers: Record<string, string>;
+  data: TResponse;
   response: Response;
-  body: TResponse;
 }
 
 export interface HttpRequestErrorOptions<TBody = unknown> {
@@ -304,8 +307,11 @@ export async function request<TResponse = unknown, TBody = unknown>(
     }
 
     return {
+      status: response.status,
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries()),
+      data: responseBody,
       response,
-      body: responseBody,
     };
   } catch (error) {
     requestError = error;

@@ -12,6 +12,6 @@ describe("request and assertion", () => {
     lightyAssert.statusCodeIs(result, 200);
     lightyAssert.bodyIsArray(result);
     lightyAssert.bodyArrayIsNotEmpty(result);
-    assert.equal(typeof result.body[0].bookingid, "number");
+    assert.equal(typeof result.data[0].bookingid, "number");
   });
 });
