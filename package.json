@@ -22,7 +22,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "run": "pnpm run build && node run.ts",
-    "test": "pnpm run build && node --test test/unit.test.js test/request.test.js",
+    "test": "pnpm run build && node --test test/unit.test.js test/request.test.js test/package-smoke.test.js",
+    "test:package": "node --test test/package-smoke.test.js",
     "test:e2e": "pnpm run build && node --test test/e2e.test.js"
   },
   "devDependencies": {
