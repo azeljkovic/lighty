@@ -57,7 +57,7 @@ export async function request<TResponse = unknown, TBody = unknown>(
     method: config.method,
     headers,
     body: config.body == null ? undefined : JSON.stringify(config.body),
-    signal: config.signal,
+    signal: createRequestSignal(config.signal, config.timeoutMs),
   });
 
   await logResponse(response);
@@ -165,4 +165,18 @@ async function parseResponseBody<TResponse>(response: Response): Promise<TRespon
   }
 
   return text as TResponse;
+}
+
+function createRequestSignal(signal?: AbortSignal, timeoutMs?: number): AbortSignal | undefined {
+  if (timeoutMs == null) {
+    return signal;
+  }
+
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+
+  if (!signal) {
+    return timeoutSignal;
+  }
+
+  return AbortSignal.any([signal, timeoutSignal]);
 }

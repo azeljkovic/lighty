@@ -1,12 +1,43 @@
 import assert from "node:assert/strict";
 import {describe, it} from "node:test";
-import {lightyAssert} from "../dist/index.js";
+import {lightyAssert, request} from "../dist/index.js";
 
 describe("namespace export", () => {
   it("exposes helpers through lighty", () => {
     lightyAssert.responseIsOk(makeResult(200))
     lightyAssert.statusCodeIs(makeResult(204), 204);
     lightyAssert.bodyEquals({id: 1}, {id: 1});
+  });
+});
+
+describe("requests", () => {
+  it("aborts fetch when timeoutMs elapses", async () => {
+    const originalFetch = globalThis.fetch;
+    let observedSignal;
+
+    globalThis.fetch = async (_url, init) => {
+      observedSignal = init.signal;
+
+      return new Promise((_resolve, reject) => {
+        init.signal.addEventListener("abort", () => reject(init.signal.reason), {once: true});
+      });
+    };
+
+    try {
+      await assert.rejects(
+        request({
+          method: "GET",
+          url: "https://example.test/resource",
+          timeoutMs: 1,
+        }),
+        {name: "TimeoutError"}
+      );
+
+      assert.ok(observedSignal instanceof AbortSignal);
+      assert.equal(observedSignal.aborted, true);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
 
