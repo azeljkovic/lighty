@@ -131,6 +131,7 @@ export type {
   InvalidJsonResponseErrorOptions,
   MethodConfig,
   RequestConfig,
+  RequestResponseType,
   RequestResult,
 } from "./requests/rq.js";
 export type { HttpRequestErrorOptions } from "./requests/rq.js";

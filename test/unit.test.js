@@ -153,6 +153,129 @@ describe("requests", () => {
     }
   });
 
+  it("supports explicit response types", async () => {
+    const originalFetch = globalThis.fetch;
+
+    try {
+      globalThis.fetch = async () =>
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "content-type": "text/plain" },
+        });
+      assert.deepEqual(
+        (
+          await request({
+            method: "GET",
+            url: "https://example.test/json",
+            responseType: "json",
+            logger: false,
+          })
+        ).body,
+        { ok: true },
+      );
+
+      globalThis.fetch = async () =>
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      assert.equal(
+        (
+          await request({
+            method: "GET",
+            url: "https://example.test/text",
+            responseType: "text",
+            logger: false,
+          })
+        ).body,
+        JSON.stringify({ ok: true }),
+      );
+
+      globalThis.fetch = async () =>
+        new Response("binary", {
+          status: 200,
+        });
+      const arrayBufferResult = await request({
+        method: "GET",
+        url: "https://example.test/array-buffer",
+        responseType: "arrayBuffer",
+        logger: false,
+      });
+      assert.ok(arrayBufferResult.body instanceof ArrayBuffer);
+      assert.equal(new TextDecoder().decode(arrayBufferResult.body), "binary");
+
+      globalThis.fetch = async () =>
+        new Response("file", {
+          status: 200,
+          headers: { "content-type": "text/plain" },
+        });
+      const blobResult = await request({
+        method: "GET",
+        url: "https://example.test/blob",
+        responseType: "blob",
+        logger: false,
+      });
+      assert.ok(blobResult.body instanceof Blob);
+      assert.equal(await blobResult.body.text(), "file");
+      assert.equal(blobResult.body.type, "text/plain");
+
+      globalThis.fetch = async () =>
+        new Response("streamed", {
+          status: 200,
+        });
+      const streamResult = await request({
+        method: "GET",
+        url: "https://example.test/stream",
+        responseType: "stream",
+        logger: false,
+      });
+      assert.ok(streamResult.body instanceof ReadableStream);
+      assert.equal(await new Response(streamResult.body).text(), "streamed");
+
+      globalThis.fetch = async () =>
+        new Response("ignored", {
+          status: 200,
+        });
+      const noneResult = await request({
+        method: "GET",
+        url: "https://example.test/none",
+        responseType: "none",
+        logger: false,
+      });
+      assert.equal(noneResult.body, undefined);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("uses client responseType defaults", async () => {
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async () =>
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+
+    try {
+      const client = createClient({
+        baseUrl: "https://example.test",
+        responseType: "text",
+        logger: false,
+      });
+
+      const defaultResult = await client.getRequest("/default");
+      assert.equal(defaultResult.body, JSON.stringify({ ok: true }));
+
+      const overrideResult = await client.getRequest("/override", {
+        responseType: "json",
+      });
+      assert.deepEqual(overrideResult.body, { ok: true });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("throws InvalidJsonResponseError with response details for invalid JSON", async () => {
     const originalFetch = globalThis.fetch;
 

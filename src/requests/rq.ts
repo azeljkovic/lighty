@@ -19,6 +19,13 @@ type RequestParamValue =
   | undefined
   | Array<string | number | boolean>;
 type RequestParams = Record<string, RequestParamValue>;
+export type RequestResponseType =
+  | "json"
+  | "text"
+  | "arrayBuffer"
+  | "blob"
+  | "stream"
+  | "none";
 
 export interface RequestResult<TResponse = unknown> {
   response: Response;
@@ -90,6 +97,7 @@ export interface RequestConfig<TBody = unknown> {
   signal?: AbortSignal;
   timeoutMs?: number;
   throwOnHttpError?: boolean;
+  responseType?: RequestResponseType;
   logger?: RequestLoggerConfig;
 }
 
@@ -100,6 +108,7 @@ export interface MethodConfig<TBody = unknown> {
   signal?: AbortSignal;
   timeoutMs?: number;
   throwOnHttpError?: boolean;
+  responseType?: RequestResponseType;
   logger?: RequestLoggerConfig;
 }
 
@@ -108,6 +117,7 @@ export interface ClientConfig {
   headers?: HeadersInit;
   timeoutMs?: number;
   throwOnHttpError?: boolean;
+  responseType?: RequestResponseType;
   logger?: RequestLoggerConfig;
 }
 
@@ -265,7 +275,11 @@ export async function request<TResponse = unknown, TBody = unknown>(
       signal: createRequestSignal(config.signal, config.timeoutMs),
     });
 
-    responseBody = await parseResponseBody<TResponse>(response, url.toString());
+    responseBody = await parseResponseBody<TResponse>(
+      response,
+      url.toString(),
+      config.responseType,
+    );
 
     await logResponse(config.logger, {
       method: config.method,
@@ -276,7 +290,7 @@ export async function request<TResponse = unknown, TBody = unknown>(
       redirected: response.redirected,
       type: response.type,
       headers: redactHeaders(Object.fromEntries(response.headers.entries())),
-      body: redactBody(responseBody),
+      body: getLogResponseBody(responseBody, config.responseType),
     });
 
     if (!response.ok && config.throwOnHttpError !== false) {
@@ -390,7 +404,28 @@ export function optionsRequest<TResponse = unknown>(
 async function parseResponseBody<TResponse>(
   response: Response,
   requestUrl: string,
+  responseType?: RequestResponseType,
 ): Promise<TResponse> {
+  if (responseType === "none") {
+    return undefined as TResponse;
+  }
+
+  if (responseType === "stream") {
+    return response.body as TResponse;
+  }
+
+  if (responseType === "arrayBuffer") {
+    return (await response.arrayBuffer()) as TResponse;
+  }
+
+  if (responseType === "blob") {
+    return (await response.blob()) as TResponse;
+  }
+
+  if (responseType === "text") {
+    return (await response.text()) as TResponse;
+  }
+
   const text = await response.text();
 
   if (!text) {
@@ -399,7 +434,7 @@ async function parseResponseBody<TResponse>(
 
   const contentType = response.headers.get("content-type") ?? "";
 
-  if (contentType.includes("application/json")) {
+  if (responseType === "json" || contentType.includes("application/json")) {
     try {
       return JSON.parse(text) as TResponse;
     } catch (error) {
@@ -415,6 +450,25 @@ async function parseResponseBody<TResponse>(
   }
 
   return text as TResponse;
+}
+
+function getLogResponseBody<TResponse>(
+  body: TResponse,
+  responseType?: RequestResponseType,
+): unknown {
+  if (body instanceof ArrayBuffer) {
+    return `[ArrayBuffer ${body.byteLength} bytes]`;
+  }
+
+  if (body instanceof Blob) {
+    return `[Blob ${body.size} bytes${body.type ? ` ${body.type}` : ""}]`;
+  }
+
+  if (responseType === "stream" && body != null) {
+    return "[ReadableStream]";
+  }
+
+  return redactBody(body);
 }
 
 function createRequestSignal(
@@ -445,6 +499,7 @@ function mergeClientConfig<TBody>(
     timeoutMs: requestConfig.timeoutMs ?? clientConfig.timeoutMs,
     throwOnHttpError:
       requestConfig.throwOnHttpError ?? clientConfig.throwOnHttpError,
+    responseType: requestConfig.responseType ?? clientConfig.responseType,
     logger: requestConfig.logger ?? clientConfig.logger,
   };
 }
