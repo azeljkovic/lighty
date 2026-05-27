@@ -44,6 +44,7 @@ describe("request behavior with a local HTTP server", () => {
           params: {
             active: true,
             role: ["admin", "editor"],
+            empty: null,
             skipped: undefined,
           },
           headers: {
@@ -109,6 +110,38 @@ describe("request behavior with a local HTTP server", () => {
     );
   });
 
+  it("surfaces non-JSON HTTP error payloads", async () => {
+    await withTestServer(
+      async (_req, res) => {
+        res.writeHead(500, {
+          "content-type": "text/plain",
+          "x-request-id": "local-text-error-123",
+        });
+        res.end("upstream unavailable");
+      },
+      async (baseUrl) => {
+        await assert.rejects(
+          request({
+            method: "GET",
+            url: `${baseUrl}/unavailable`,
+            logger: false,
+          }),
+          (error) => {
+            assert.ok(error instanceof HttpRequestError);
+            assert.equal(error.status, 500);
+            assert.equal(error.statusText, "Internal Server Error");
+            assert.equal(error.headers["content-type"], "text/plain");
+            assert.equal(error.headers["x-request-id"], "local-text-error-123");
+            assert.equal(error.body, "upstream unavailable");
+            assert.equal(error.url, `${baseUrl}/unavailable`);
+
+            return true;
+          },
+        );
+      },
+    );
+  });
+
   it("returns HTTP error responses when throwOnHttpError is false", async () => {
     await withTestServer(
       async (_req, res) => {
@@ -126,6 +159,82 @@ describe("request behavior with a local HTTP server", () => {
         assert.equal(result.status, 404);
         assert.equal(result.ok, false);
         assert.deepEqual(result.data, { code: "not_found" });
+      },
+    );
+  });
+
+  it("returns non-JSON text responses as text", async () => {
+    await withTestServer(
+      async (_req, res) => {
+        res.writeHead(200, {
+          "content-type": "text/plain",
+          "x-response-kind": "plain",
+        });
+        res.end("plain text response");
+      },
+      async (baseUrl) => {
+        const result = await request({
+          method: "GET",
+          url: `${baseUrl}/plain`,
+          logger: false,
+        });
+
+        assert.equal(result.status, 200);
+        assert.equal(result.ok, true);
+        assert.equal(result.headers["content-type"], "text/plain");
+        assert.equal(result.headers["x-response-kind"], "plain");
+        assert.equal(result.data, "plain text response");
+      },
+    );
+  });
+
+  it("returns undefined data for 204 and HEAD responses", async () => {
+    await withTestServer(
+      async (req, res) => {
+        if (req.url === "/empty") {
+          assert.equal(req.method, "DELETE");
+          res.writeHead(204, { "x-response-kind": "no-content" });
+          res.end();
+          return;
+        }
+
+        if (req.url === "/head") {
+          assert.equal(req.method, "HEAD");
+          assert.equal(req.headers["x-client"], "head-client");
+          assert.equal(req.headers["x-request"], "head-request");
+          res.writeHead(200, { "x-response-kind": "head" });
+          res.end();
+          return;
+        }
+
+        res.writeHead(404);
+        res.end();
+      },
+      async (baseUrl) => {
+        const noContentResult = await request({
+          method: "DELETE",
+          url: `${baseUrl}/empty`,
+          logger: false,
+        });
+
+        assert.equal(noContentResult.status, 204);
+        assert.equal(noContentResult.ok, true);
+        assert.equal(noContentResult.headers["x-response-kind"], "no-content");
+        assert.equal(noContentResult.data, undefined);
+
+        const client = createClient({
+          baseUrl,
+          headers: new Headers([["x-client", "head-client"]]),
+          logger: false,
+        });
+        const headResult = await client.headRequest("/head", {
+          headers: [["x-request", "head-request"]],
+        });
+
+        assert.equal(headResult.status, 200);
+        assert.equal(headResult.ok, true);
+        assert.equal(headResult.headers["x-response-kind"], "head");
+        assert.equal(headResult.data, undefined);
       },
     );
   });
