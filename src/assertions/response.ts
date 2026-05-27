@@ -1,10 +1,13 @@
 import * as assert from "node:assert";
-import {getResponse, type ResponseAssertionTarget} from "./targets.js";
+import { getResponse, type ResponseAssertionTarget } from "./targets.js";
 
 export function responseIsOk(response: ResponseAssertionTarget) {
   const actual = getResponse(response);
 
-  assert.ok(actual.status >= 200 && actual.status <= 299, `Response not ok (outside of range 200-299), received ${actual.status}`);
+  assert.ok(
+    actual.status >= 200 && actual.status <= 299,
+    `Response not ok (outside of range 200-299), received ${actual.status}`,
+  );
 }
 
 export function responseIsCreated(response: ResponseAssertionTarget) {
@@ -35,19 +38,36 @@ export function responseIsServerError(response: ResponseAssertionTarget) {
   statusCodeIsInRange(response, 500, 599);
 }
 
-export function statusCodeIs(response: ResponseAssertionTarget, statusCode: number) {
+export function statusCodeIs(
+  response: ResponseAssertionTarget,
+  statusCode: number,
+) {
   const actual = getResponse(response);
 
-  assert.strictEqual(actual.status, statusCode, `Response status code ${actual.status} does not match the expected status code ${statusCode}`);
+  assert.strictEqual(
+    actual.status,
+    statusCode,
+    `Response status code ${actual.status} does not match the expected status code ${statusCode}`,
+  );
 }
 
-export function statusCodeIsOneOf(response: ResponseAssertionTarget, statusCodes: number[]) {
+export function statusCodeIsOneOf(
+  response: ResponseAssertionTarget,
+  statusCodes: number[],
+) {
   const actual = getResponse(response);
 
-  assert.ok(statusCodes.includes(actual.status), `Response status code ${actual.status} was not one of: ${statusCodes.join(", ")}`);
+  assert.ok(
+    statusCodes.includes(actual.status),
+    `Response status code ${actual.status} was not one of: ${statusCodes.join(", ")}`,
+  );
 }
 
-export function statusCodeIsInRange(response: ResponseAssertionTarget, minStatusCode: number, maxStatusCode: number) {
+export function statusCodeIsInRange(
+  response: ResponseAssertionTarget,
+  minStatusCode: number,
+  maxStatusCode: number,
+) {
   const actual = getResponse(response);
 
   assert.ok(

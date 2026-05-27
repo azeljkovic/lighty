@@ -21,7 +21,12 @@ import {
   bodyMatches,
 } from "./assertions/body.js";
 
-import {contentTypeIsJson, headerExists, headerIncludes, headerIs,} from "./assertions/headers.js";
+import {
+  contentTypeIsJson,
+  headerExists,
+  headerIncludes,
+  headerIs,
+} from "./assertions/headers.js";
 
 import {
   responseIsBadRequest,
@@ -60,12 +65,7 @@ export {
   bodyMatches,
 };
 
-export {
-  contentTypeIsJson,
-  headerExists,
-  headerIncludes,
-  headerIs,
-};
+export { contentTypeIsJson, headerExists, headerIncludes, headerIs };
 
 export {
   responseIsBadRequest,
@@ -91,7 +91,7 @@ export const lightyRequest = {
   postRequest,
   putRequest,
   request,
-}
+};
 
 export const lightyAssert = {
   bodyArrayIsNotEmpty,
@@ -117,9 +117,12 @@ export const lightyAssert = {
   statusCodeIs,
   statusCodeIsInRange,
   statusCodeIsOneOf,
-}
+};
 
-
-export type {MethodConfig, RequestConfig, RequestResult} from "./requests/rq.js";
-export type {HttpRequestErrorOptions} from "./requests/rq.js";
-export type {Body, BodyParseError, HttpMethod} from "./types.js";
+export type {
+  MethodConfig,
+  RequestConfig,
+  RequestResult,
+} from "./requests/rq.js";
+export type { HttpRequestErrorOptions } from "./requests/rq.js";
+export type { Body, BodyParseError, HttpMethod } from "./types.js";

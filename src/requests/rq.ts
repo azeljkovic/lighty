@@ -1,5 +1,9 @@
-import {logRequestEnd, logRequestStart, logResponse} from "../utils/logger.js";
-import type {HttpMethod} from "../types.js";
+import {
+  logRequestEnd,
+  logRequestStart,
+  logResponse,
+} from "../utils/logger.js";
+import type { HttpMethod } from "../types.js";
 
 type BodylessMethodConfig = Omit<MethodConfig, "body">;
 
@@ -55,14 +59,14 @@ export interface MethodConfig<TBody = unknown> {
 }
 
 export async function request<TResponse = unknown, TBody = unknown>(
-  config: RequestConfig<TBody>
+  config: RequestConfig<TBody>,
 ): Promise<RequestResult<TResponse>> {
   const url = new URL(config.url);
 
   if (config.params) {
     for (const [key, value] of Object.entries(config.params)) {
       if (Array.isArray(value)) {
-        value.forEach(v => {
+        value.forEach((v) => {
           if (v != null) url.searchParams.append(key, String(v));
         });
       } else if (value != null) {
@@ -75,7 +79,7 @@ export async function request<TResponse = unknown, TBody = unknown>(
 
   const headers = {
     Accept: "application/json",
-    ...(config.body == null ? {} : {"Content-Type": "application/json"}),
+    ...(config.body == null ? {} : { "Content-Type": "application/json" }),
     ...config.headers,
   };
 
@@ -110,7 +114,7 @@ export async function request<TResponse = unknown, TBody = unknown>(
 
 export function getRequest<TResponse = unknown>(
   url: string,
-  config: BodylessMethodConfig = {}
+  config: BodylessMethodConfig = {},
 ): Promise<RequestResult<TResponse>> {
   return request<TResponse>({
     ...config,
@@ -121,7 +125,7 @@ export function getRequest<TResponse = unknown>(
 
 export function postRequest<TResponse = unknown, TBody = unknown>(
   url: string,
-  config: MethodConfig<TBody> = {}
+  config: MethodConfig<TBody> = {},
 ): Promise<RequestResult<TResponse>> {
   return request<TResponse, TBody>({
     ...config,
@@ -132,7 +136,7 @@ export function postRequest<TResponse = unknown, TBody = unknown>(
 
 export function putRequest<TResponse = unknown, TBody = unknown>(
   url: string,
-  config: MethodConfig<TBody> = {}
+  config: MethodConfig<TBody> = {},
 ): Promise<RequestResult<TResponse>> {
   return request<TResponse, TBody>({
     ...config,
@@ -143,7 +147,7 @@ export function putRequest<TResponse = unknown, TBody = unknown>(
 
 export function patchRequest<TResponse = unknown, TBody = unknown>(
   url: string,
-  config: MethodConfig<TBody> = {}
+  config: MethodConfig<TBody> = {},
 ): Promise<RequestResult<TResponse>> {
   return request<TResponse, TBody>({
     ...config,
@@ -154,7 +158,7 @@ export function patchRequest<TResponse = unknown, TBody = unknown>(
 
 export function deleteRequest<TResponse = unknown>(
   url: string,
-  config: BodylessMethodConfig = {}
+  config: BodylessMethodConfig = {},
 ): Promise<RequestResult<TResponse>> {
   return request<TResponse>({
     ...config,
@@ -165,7 +169,7 @@ export function deleteRequest<TResponse = unknown>(
 
 export function headRequest<TResponse = unknown>(
   url: string,
-  config: BodylessMethodConfig = {}
+  config: BodylessMethodConfig = {},
 ): Promise<RequestResult<TResponse>> {
   return request<TResponse>({
     ...config,
@@ -176,7 +180,7 @@ export function headRequest<TResponse = unknown>(
 
 export function optionsRequest<TResponse = unknown>(
   url: string,
-  config: BodylessMethodConfig = {}
+  config: BodylessMethodConfig = {},
 ): Promise<RequestResult<TResponse>> {
   return request<TResponse>({
     ...config,
@@ -185,7 +189,9 @@ export function optionsRequest<TResponse = unknown>(
   });
 }
 
-async function parseResponseBody<TResponse>(response: Response): Promise<TResponse> {
+async function parseResponseBody<TResponse>(
+  response: Response,
+): Promise<TResponse> {
   const text = await response.text();
 
   if (!text) {
@@ -201,7 +207,10 @@ async function parseResponseBody<TResponse>(response: Response): Promise<TRespon
   return text as TResponse;
 }
 
-function createRequestSignal(signal?: AbortSignal, timeoutMs?: number): AbortSignal | undefined {
+function createRequestSignal(
+  signal?: AbortSignal,
+  timeoutMs?: number,
+): AbortSignal | undefined {
   if (timeoutMs == null) {
     return signal;
   }

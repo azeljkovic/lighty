@@ -1,9 +1,16 @@
 import * as assert from "node:assert";
-import type {RequestResult} from "../requests/rq.js";
-import {getBody, type BodyAssertionTarget} from "./targets.js";
+import type { RequestResult } from "../requests/rq.js";
+import { getBody, type BodyAssertionTarget } from "./targets.js";
 
-export function bodyEquals<TBody>(actualBody: BodyAssertionTarget<TBody>, expectedBody: TBody) {
-  assert.deepStrictEqual(getBody(actualBody), expectedBody, "Response body did not match the expected body");
+export function bodyEquals<TBody>(
+  actualBody: BodyAssertionTarget<TBody>,
+  expectedBody: TBody,
+) {
+  assert.deepStrictEqual(
+    getBody(actualBody),
+    expectedBody,
+    "Response body did not match the expected body",
+  );
 }
 
 export function bodyHasProperty<TBody extends Record<string, unknown>>(
@@ -13,7 +20,10 @@ export function bodyHasProperty<TBody extends Record<string, unknown>>(
 ) {
   const body = getBody(actualBody);
 
-  assert.ok(Object.hasOwn(body, propertyName), `Expected response body to include property "${String(propertyName)}"`);
+  assert.ok(
+    Object.hasOwn(body, propertyName),
+    `Expected response body to include property "${String(propertyName)}"`,
+  );
 
   if (arguments.length === 3) {
     assert.deepStrictEqual(
@@ -30,8 +40,13 @@ export function bodyIncludesProperties<TBody extends Record<string, unknown>>(
 ) {
   const body = getBody(actualBody);
 
-  for (const [propertyName, expectedValue] of Object.entries(expectedProperties)) {
-    assert.ok(Object.hasOwn(body, propertyName), `Expected response body to include property "${propertyName}"`);
+  for (const [propertyName, expectedValue] of Object.entries(
+    expectedProperties,
+  )) {
+    assert.ok(
+      Object.hasOwn(body, propertyName),
+      `Expected response body to include property "${propertyName}"`,
+    );
     assert.deepStrictEqual(
       body[propertyName],
       expectedValue,
@@ -40,20 +55,37 @@ export function bodyIncludesProperties<TBody extends Record<string, unknown>>(
   }
 }
 
-export function bodyIsArray<TItem = unknown>(actualBody: BodyAssertionTarget<unknown>): asserts actualBody is TItem[] | RequestResult<TItem[]> {
-  assert.ok(Array.isArray(getBody(actualBody)), "Expected response body to be an array");
+export function bodyIsArray<TItem = unknown>(
+  actualBody: BodyAssertionTarget<unknown>,
+): asserts actualBody is TItem[] | RequestResult<TItem[]> {
+  assert.ok(
+    Array.isArray(getBody(actualBody)),
+    "Expected response body to be an array",
+  );
 }
 
-export function bodyArrayLengthIs<TItem = unknown>(actualBody: BodyAssertionTarget<TItem[]>, expectedLength: number) {
+export function bodyArrayLengthIs<TItem = unknown>(
+  actualBody: BodyAssertionTarget<TItem[]>,
+  expectedLength: number,
+) {
   const body = getBody(actualBody);
 
-  assert.strictEqual(body.length, expectedLength, `Response body array length did not match ${expectedLength}`);
+  assert.strictEqual(
+    body.length,
+    expectedLength,
+    `Response body array length did not match ${expectedLength}`,
+  );
 }
 
-export function bodyArrayIsNotEmpty<TItem = unknown>(actualBody: BodyAssertionTarget<TItem[]>) {
+export function bodyArrayIsNotEmpty<TItem = unknown>(
+  actualBody: BodyAssertionTarget<TItem[]>,
+) {
   const body = getBody(actualBody);
 
-  assert.ok(body.length > 0, "Expected response body array to contain at least one item");
+  assert.ok(
+    body.length > 0,
+    "Expected response body array to contain at least one item",
+  );
 }
 
 export function bodyIsEmpty(actualBody: BodyAssertionTarget<unknown>) {

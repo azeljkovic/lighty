@@ -1,13 +1,23 @@
 import * as assert from "node:assert";
-import {getResponse, type ResponseAssertionTarget} from "./targets.js";
+import { getResponse, type ResponseAssertionTarget } from "./targets.js";
 
-export function headerExists(response: ResponseAssertionTarget, headerName: string) {
+export function headerExists(
+  response: ResponseAssertionTarget,
+  headerName: string,
+) {
   const actual = getResponse(response);
 
-  assert.ok(actual.headers.has(headerName), `Expected response header "${headerName}" to exist`);
+  assert.ok(
+    actual.headers.has(headerName),
+    `Expected response header "${headerName}" to exist`,
+  );
 }
 
-export function headerIs(response: ResponseAssertionTarget, headerName: string, expectedValue: string) {
+export function headerIs(
+  response: ResponseAssertionTarget,
+  headerName: string,
+  expectedValue: string,
+) {
   const actual = getResponse(response);
 
   assert.strictEqual(
@@ -17,7 +27,11 @@ export function headerIs(response: ResponseAssertionTarget, headerName: string, 
   );
 }
 
-export function headerIncludes(response: ResponseAssertionTarget, headerName: string, expectedValue: string) {
+export function headerIncludes(
+  response: ResponseAssertionTarget,
+  headerName: string,
+  expectedValue: string,
+) {
   const actual = getResponse(response);
   const headerValue = actual.headers.get(headerName);
 

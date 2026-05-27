@@ -1,4 +1,4 @@
-import {HttpMethod} from "../types.js";
+import { HttpMethod } from "../types.js";
 import process from "node:process";
 
 export function logRequestStart(verb: HttpMethod, url: URL) {
@@ -24,7 +24,7 @@ export async function logResponse(response: Response) {
     console.log(`⚡️URL: ${response.url}`);
     console.log(`⚡️Redirected: ${response.redirected}`);
     console.log(`⚡️Type: ${response.type}`);
-    console.log('⚡️Headers:', Object.fromEntries(response.headers.entries()));
+    console.log("⚡️Headers:", Object.fromEntries(response.headers.entries()));
     // console.log('⚡️Body:', JSON.stringify(response.body));
     const text = await response.clone().text();
 
