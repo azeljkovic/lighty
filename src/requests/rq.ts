@@ -6,6 +6,14 @@ import {
 import type { HttpMethod } from "../types.js";
 
 type BodylessMethodConfig = Omit<MethodConfig, "body">;
+type RequestParamValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Array<string | number | boolean>;
+type RequestParams = Record<string, RequestParamValue>;
 
 export interface RequestResult<TResponse = unknown> {
   response: Response;
@@ -42,7 +50,7 @@ export interface RequestConfig<TBody = unknown> {
   method: HttpMethod;
   url: string;
   headers?: Record<string, string>;
-  params?: Record<string, string>;
+  params?: RequestParams;
   body?: TBody;
   signal?: AbortSignal;
   timeoutMs?: number;
@@ -51,7 +59,7 @@ export interface RequestConfig<TBody = unknown> {
 
 export interface MethodConfig<TBody = unknown> {
   headers?: Record<string, string>;
-  params?: Record<string, string>;
+  params?: RequestParams;
   body?: TBody;
   signal?: AbortSignal;
   timeoutMs?: number;
