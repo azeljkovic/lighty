@@ -125,4 +125,12 @@ export type {
   RequestResult,
 } from "./requests/rq.js";
 export type { HttpRequestErrorOptions } from "./requests/rq.js";
+export type {
+  RequestEndLogEntry,
+  RequestLogger,
+  RequestLoggerConfig,
+  RequestLoggerLevel,
+  RequestStartLogEntry,
+  ResponseLogEntry,
+} from "./utils/logger.js";
 export type { Body, BodyParseError, HttpMethod } from "./types.js";

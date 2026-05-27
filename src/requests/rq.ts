@@ -2,8 +2,13 @@ import {
   logRequestEnd,
   logRequestStart,
   logResponse,
+  redactBody,
+  redactHeaders,
+  redactUrl,
+  toLogError,
 } from "../utils/logger.js";
 import type { HttpMethod } from "../types.js";
+import type { RequestLoggerConfig } from "../utils/logger.js";
 
 type BodylessMethodConfig = Omit<MethodConfig, "body">;
 type RequestParamValue =
@@ -55,6 +60,7 @@ export interface RequestConfig<TBody = unknown> {
   signal?: AbortSignal;
   timeoutMs?: number;
   throwOnHttpError?: boolean;
+  logger?: RequestLoggerConfig;
 }
 
 export interface MethodConfig<TBody = unknown> {
@@ -64,6 +70,7 @@ export interface MethodConfig<TBody = unknown> {
   signal?: AbortSignal;
   timeoutMs?: number;
   throwOnHttpError?: boolean;
+  logger?: RequestLoggerConfig;
 }
 
 export async function request<TResponse = unknown, TBody = unknown>(
@@ -83,41 +90,77 @@ export async function request<TResponse = unknown, TBody = unknown>(
     }
   }
 
-  logRequestStart(config.method, url);
-
   const headers = {
     Accept: "application/json",
     ...(config.body == null ? {} : { "Content-Type": "application/json" }),
     ...config.headers,
   };
 
-  const response = await fetch(url, {
+  const startedAt = Date.now();
+  const logUrl = redactUrl(url);
+  const logHeaders = redactHeaders(headers);
+  let response: Response | undefined;
+  let responseBody: TResponse | undefined;
+  let requestError: unknown;
+
+  await logRequestStart(config.logger, {
     method: config.method,
-    headers,
-    body: config.body == null ? undefined : JSON.stringify(config.body),
-    signal: createRequestSignal(config.signal, config.timeoutMs),
+    url: logUrl,
+    headers: logHeaders,
+    ...(config.body == null ? {} : { body: redactBody(config.body) }),
   });
 
-  await logResponse(response);
+  try {
+    response = await fetch(url, {
+      method: config.method,
+      headers,
+      body: config.body == null ? undefined : JSON.stringify(config.body),
+      signal: createRequestSignal(config.signal, config.timeoutMs),
+    });
 
-  const responseBody = await parseResponseBody<TResponse>(response);
+    responseBody = await parseResponseBody<TResponse>(response);
 
-  if (!response.ok && config.throwOnHttpError !== false) {
-    throw new HttpRequestError<TResponse>({
+    await logResponse(config.logger, {
+      method: config.method,
+      url: logUrl,
       status: response.status,
       statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries()),
+      ok: response.ok,
+      redirected: response.redirected,
+      type: response.type,
+      headers: redactHeaders(Object.fromEntries(response.headers.entries())),
+      body: redactBody(responseBody),
+    });
+
+    if (!response.ok && config.throwOnHttpError !== false) {
+      throw new HttpRequestError<TResponse>({
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        body: responseBody,
+        url: response.url || url.toString(),
+      });
+    }
+
+    return {
+      response,
       body: responseBody,
-      url: response.url || url.toString(),
+    };
+  } catch (error) {
+    requestError = error;
+    throw error;
+  } finally {
+    await logRequestEnd(config.logger, {
+      method: config.method,
+      url: logUrl,
+      durationMs: Date.now() - startedAt,
+      status: response?.status,
+      ok: response?.ok,
+      ...(requestError === undefined
+        ? {}
+        : { error: toLogError(requestError) }),
     });
   }
-
-  logRequestEnd(config.method, url);
-
-  return {
-    response,
-    body: responseBody,
-  };
 }
 
 export function getRequest<TResponse = unknown>(

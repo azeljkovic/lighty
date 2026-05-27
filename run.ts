@@ -1,5 +1,6 @@
 import {
   getRequest,
+  postRequest,
   type MethodConfig,
   type RequestConfig,
 } from "./dist/index.js";
@@ -52,6 +53,7 @@ const post: RequestConfig = {
   method: "POST",
   url,
   body: booking,
+  logger: "full"
 };
 
 const post2: MethodConfig = {
@@ -88,6 +90,7 @@ const dlt: RequestConfig = {
 };
 
 // request(post);
+// const logger: RequestLoggerConfig = "full";
 
-await getRequest(url);
-// await postRequest(url, post2);
+// await getRequest(url, { logger });
+await postRequest(url, post);
