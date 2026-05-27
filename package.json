@@ -18,15 +18,25 @@
     "clean": "node --eval \"import('node:fs').then(fs => fs.rmSync('dist', { recursive: true, force: true }))\"",
     "build": "npm run clean && tsc",
     "prepack": "npm run build",
-    "lint": "pnpm exec prettier . --write",
+    "format": "pnpm exec prettier . --write",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "run": "pnpm run build && VERBOSE_LOGGING=true node run.ts",
     "test": "pnpm run build && node --test test/unit.test.js",
     "test:e2e": "pnpm run build && node --test test/e2e.test.js",
     "test:e2e:verbose": "pnpm run build && VERBOSE_LOGGING=true node --test test/e2e.test.js"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@eslint/json": "1.2.0",
+    "@eslint/markdown": "8.0.2",
     "@types/node": "25.9.1",
+    "eslint": "10.4.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.6.0",
+    "jiti": "2.7.0",
     "prettier": "3.8.3",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.60.0"
   }
 }
