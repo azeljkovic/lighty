@@ -16,8 +16,8 @@
   ],
   "scripts": {
     "clean": "node --eval \"import('node:fs').then(fs => fs.rmSync('dist', { recursive: true, force: true }))\"",
-    "build": "npm run clean && tsc",
-    "prepack": "npm run build",
+    "build": "pnpm run clean && tsc",
+    "prepack": "pnpm run build",
     "format": "pnpm exec prettier . --write",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

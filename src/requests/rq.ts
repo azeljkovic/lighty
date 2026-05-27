@@ -84,7 +84,7 @@ export class InvalidJsonResponseError extends Error {
 export interface RequestConfig<TBody = unknown> {
   method: HttpMethod;
   url: string;
-  headers?: Record<string, string>;
+  headers?: HeadersInit;
   params?: RequestParams;
   body?: TBody;
   signal?: AbortSignal;
@@ -94,7 +94,7 @@ export interface RequestConfig<TBody = unknown> {
 }
 
 export interface MethodConfig<TBody = unknown> {
-  headers?: Record<string, string>;
+  headers?: HeadersInit;
   params?: RequestParams;
   body?: TBody;
   signal?: AbortSignal;
@@ -105,7 +105,7 @@ export interface MethodConfig<TBody = unknown> {
 
 export interface ClientConfig {
   baseUrl?: string;
-  headers?: Record<string, string>;
+  headers?: HeadersInit;
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   logger?: RequestLoggerConfig;
@@ -235,11 +235,13 @@ export async function request<TResponse = unknown, TBody = unknown>(
     }
   }
 
-  const headers = {
-    Accept: "application/json",
-    ...(config.body == null ? {} : { "Content-Type": "application/json" }),
-    ...config.headers,
-  };
+  const headers = mergeHeaders(
+    {
+      Accept: "application/json",
+      ...(config.body == null ? {} : { "Content-Type": "application/json" }),
+    },
+    config.headers,
+  );
 
   const startedAt = Date.now();
   const logUrl = redactUrl(url);
@@ -439,10 +441,7 @@ function mergeClientConfig<TBody>(
   return {
     ...requestConfig,
     url: resolveClientUrl(requestConfig.url, clientConfig.baseUrl),
-    headers: {
-      ...clientConfig.headers,
-      ...requestConfig.headers,
-    },
+    headers: mergeHeaders(clientConfig.headers, requestConfig.headers),
     timeoutMs: requestConfig.timeoutMs ?? clientConfig.timeoutMs,
     throwOnHttpError:
       requestConfig.throwOnHttpError ?? clientConfig.throwOnHttpError,
@@ -463,4 +462,43 @@ function resolveClientUrl(url: string, baseUrl: string | undefined) {
 
 function isAbsoluteUrl(url: string) {
   return /^[a-z][a-z\d+\-.]*:/i.test(url);
+}
+
+function mergeHeaders(
+  ...headers: Array<HeadersInit | undefined>
+): Record<string, string> {
+  const merged: Record<string, string> = {};
+  const headerNames = new Map<string, string>();
+
+  for (const headerInit of headers) {
+    for (const [key, value] of headersEntries(headerInit)) {
+      const normalizedKey = key.toLowerCase();
+      const previousKey = headerNames.get(normalizedKey);
+
+      if (previousKey && previousKey !== key) {
+        delete merged[previousKey];
+      }
+
+      merged[key] = value;
+      headerNames.set(normalizedKey, key);
+    }
+  }
+
+  return merged;
+}
+
+function headersEntries(headers?: HeadersInit): Array<[string, string]> {
+  if (!headers) {
+    return [];
+  }
+
+  if (headers instanceof Headers) {
+    return Array.from(headers.entries());
+  }
+
+  if (Array.isArray(headers)) {
+    return headers;
+  }
+
+  return Object.entries(headers);
 }

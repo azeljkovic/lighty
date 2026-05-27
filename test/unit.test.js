@@ -34,10 +34,10 @@ describe("requests", () => {
     try {
       const client = createClient({
         baseUrl: "https://api.example.test/v1",
-        headers: {
-          Authorization: "Bearer client-token",
-          "x-client": "client",
-        },
+        headers: new Headers([
+          ["Authorization", "Bearer client-token"],
+          ["x-client", "client"],
+        ]),
         timeoutMs: 1000,
         throwOnHttpError: false,
         logger: false,
@@ -45,10 +45,10 @@ describe("requests", () => {
 
       const result = await client.postRequest("/users", {
         params: { active: true },
-        headers: {
-          Authorization: "Bearer request-token",
-          "x-request": "request",
-        },
+        headers: [
+          ["Authorization", "Bearer request-token"],
+          ["x-request", "request"],
+        ],
         body: { name: "Ada" },
       });
 
@@ -60,9 +60,18 @@ describe("requests", () => {
         "https://api.example.test/v1/users?active=true",
       );
       assert.equal(calls[0].init.method, "POST");
-      assert.equal(calls[0].init.headers.Authorization, "Bearer request-token");
-      assert.equal(calls[0].init.headers["x-client"], "client");
-      assert.equal(calls[0].init.headers["x-request"], "request");
+      assert.equal(
+        new Headers(calls[0].init.headers).get("authorization"),
+        "Bearer request-token",
+      );
+      assert.equal(
+        new Headers(calls[0].init.headers).get("x-client"),
+        "client",
+      );
+      assert.equal(
+        new Headers(calls[0].init.headers).get("x-request"),
+        "request",
+      );
       assert.equal(calls[0].init.body, JSON.stringify({ name: "Ada" }));
       assert.ok(calls[0].init.signal instanceof AbortSignal);
     } finally {
@@ -193,8 +202,10 @@ describe("requests", () => {
     const events = [];
 
     globalThis.fetch = async (_url, init) => {
-      assert.equal(init.headers.Authorization, "Bearer request-token");
-      assert.equal(init.headers.Cookie, "session=request-cookie");
+      const requestHeaders = new Headers(init.headers);
+
+      assert.equal(requestHeaders.get("authorization"), "Bearer request-token");
+      assert.equal(requestHeaders.get("cookie"), "session=request-cookie");
       assert.equal(
         init.body,
         JSON.stringify({
