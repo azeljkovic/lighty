@@ -662,6 +662,17 @@ describe("response assertions", () => {
   });
 
   it("throws for unexpected statuses", () => {
+    const detailedResponse = {
+      status: 409,
+      statusText: "Conflict",
+      url: "https://example.test/users",
+      headers: new Headers(),
+    };
+
+    assert.throws(
+      () => lightyAssert.statusCodeIs(detailedResponse, 200),
+      /Response status 409 Conflict from 'https:\/\/example\.test\/users' does not match the expected status code 200/,
+    );
     assert.throws(
       () => lightyAssert.responseIsOk(makeResult(500)),
       /outside of range 200-299/,
@@ -797,16 +808,16 @@ describe("header assertions", () => {
 
     assert.throws(
       () => lightyAssert.headerExists(result, "x-trace-id"),
-      /Expected response header "x-trace-id" to exist/,
+      /Expected response header "x-trace-id" to exist; available headers: 'content-type', 'x-request-id'/,
     );
     assert.throws(
       () => lightyAssert.headerIs(result, "x-request-id", "request-456"),
-      /did not match the expected value/,
+      /expected 'request-456', received 'request-123'/,
     );
     assert.throws(
       () =>
         lightyAssert.headerIncludes(result, "content-type", "application/json"),
-      /did not include "application\/json"/,
+      /did not include 'application\/json'; received 'text\/plain'/,
     );
     assert.throws(
       () => lightyAssert.headerMatches(result, "x-request-id", /^trace-/),
@@ -814,7 +825,7 @@ describe("header assertions", () => {
     );
     assert.throws(
       () => lightyAssert.headerMatches(result, "x-trace-id", /^trace-/),
-      /did not match \/\^trace-\//,
+      /received missing; available headers: 'content-type', 'x-request-id'/,
     );
     assert.throws(
       () =>
@@ -823,16 +834,38 @@ describe("header assertions", () => {
           "x-request-id",
           (headerValue) => headerValue === "request-456",
         ),
-      /did not match the expected condition/,
+      /did not match the expected condition; received 'request-123'/,
     );
     assert.throws(
       () =>
         lightyAssert.headerSatisfies(result, "x-trace-id", () => true),
-      /Expected response header "x-trace-id" to exist/,
+      /Expected response header "x-trace-id" to exist; available headers: 'content-type', 'x-request-id'/,
     );
     assert.throws(
       () => lightyAssert.contentTypeIsJson(result),
-      /did not include "application\/json"/,
+      /did not include 'application\/json'; received 'text\/plain'/,
+    );
+  });
+
+  it("wraps header predicate exceptions with context", () => {
+    const result = makeResult(200, undefined, {
+      "content-type": "text/plain",
+    });
+
+    assert.throws(
+      () =>
+        lightyAssert.headerSatisfies(result, "content-type", () => {
+          throw new Error("invalid header parser state");
+        }),
+      (error) => {
+        assert.equal(error.name, "AssertionError");
+        assert.match(
+          error.message,
+          /Response header "content-type" predicate threw while evaluating received value 'text\/plain': Error: invalid header parser state/,
+        );
+        assert.equal(error.cause.message, "invalid header parser state");
+        return true;
+      },
     );
   });
 
@@ -953,23 +986,57 @@ describe("body assertions", () => {
     );
     assert.throws(
       () => lightyAssert.bodyHasProperty(result, "email"),
-      /Expected response body to include property "email"/,
+      /Expected response body to include property "email"; available properties: 'id', 'name'; received \{ id: 1, name: 'Ada' \}/,
     );
     assert.throws(
       () => lightyAssert.bodyHasProperty(result, "name", "Grace"),
-      /did not match the expected value/,
+      /property "name" did not match the expected value; expected 'Grace', received 'Ada'/,
     );
     assert.throws(
       () => lightyAssert.bodyIncludesProperties(result, { id: 2 }),
-      /did not match the expected value/,
+      /property "id" did not match the expected value; expected 2, received 1/,
     );
     assert.throws(
       () => lightyAssert.bodyPathEquals(result, "name", "Grace"),
-      /did not match the expected value/,
+      /path "name" did not match the expected value; expected 'Grace', received 'Ada'/,
     );
     assert.throws(
       () => lightyAssert.bodyMatches(result, (body) => body.id === 2),
-      /did not match the expected condition/,
+      /did not match the expected condition; received \{ id: 1, name: 'Ada' \}/,
+    );
+  });
+
+  it("wraps body predicate exceptions with context", () => {
+    const result = makeResult(200, { id: 1, name: "Ada" });
+
+    assert.throws(
+      () => lightyAssert.bodyMatches(result, (body) => body.profile.email),
+      (error) => {
+        assert.equal(error.name, "AssertionError");
+        assert.match(
+          error.message,
+          /Response body predicate threw while evaluating received body \{ id: 1, name: 'Ada' \}: TypeError:/,
+        );
+        assert.equal(error.cause.name, "TypeError");
+        return true;
+      },
+    );
+
+    assert.throws(
+      () =>
+        lightyAssert.bodyArrayContainsItemMatching(
+          makeResult(200, [{ id: 1 }]),
+          (item) => item.profile.email,
+        ),
+      (error) => {
+        assert.equal(error.name, "AssertionError");
+        assert.match(
+          error.message,
+          /Response body array predicate threw at index 0 while evaluating received item \{ id: 1 \}: TypeError:/,
+        );
+        assert.equal(error.cause.name, "TypeError");
+        return true;
+      },
     );
   });
 
@@ -1008,7 +1075,7 @@ describe("body assertions", () => {
       () => lightyAssert.bodyArrayContains(makeResult(200, [{ id: 1 }]), {
         id: 2,
       }),
-      /Expected response body array to contain the expected item/,
+      /Expected response body array to contain \{ id: 2 \}; received \[ \{ id: 1 \} \]/,
     );
     assert.throws(
       () =>

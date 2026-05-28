@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 

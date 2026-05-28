@@ -1,6 +1,11 @@
 import * as assert from "node:assert";
 import { isDeepStrictEqual } from "node:util";
 import type { RequestResult } from "../requests/rq.js";
+import {
+  assertionErrorWithCause,
+  formatThrown,
+  formatValue,
+} from "./format.js";
 import { getBody, type BodyAssertionTarget } from "./targets.js";
 
 type PathPart = string | number;
@@ -14,10 +19,12 @@ export function bodyEquals<TBody>(
   actualBody: BodyAssertionTarget<TBody>,
   expectedBody: TBody,
 ) {
+  const body = getBody(actualBody);
+
   assert.deepStrictEqual(
-    getBody(actualBody),
+    body,
     expectedBody,
-    "Response body did not match the expected body",
+    `Response body did not match the expected body; expected ${formatValue(expectedBody)}, received ${formatValue(body)}`,
   );
 }
 
@@ -25,9 +32,11 @@ export function bodyContains<TBody>(
   actualBody: BodyAssertionTarget<TBody>,
   expectedPartial: DeepPartial<TBody>,
 ) {
+  const body = getBody(actualBody);
+
   assert.ok(
-    deepPartialMatches(getBody(actualBody), expectedPartial),
-    "Response body did not contain the expected partial body",
+    deepPartialMatches(body, expectedPartial),
+    `Response body did not contain the expected partial body; expected partial ${formatValue(expectedPartial)}, received ${formatValue(body)}`,
   );
 }
 
@@ -41,14 +50,16 @@ export function bodyHasProperty<TBody extends Record<string, unknown>>(
 
   assert.ok(
     Object.hasOwn(body, propertyName),
-    `Expected response body to include property "${String(propertyName)}"`,
+    `Expected response body to include property "${String(propertyName)}"; available properties: ${formatAvailablePropertyNames(body)}; received ${formatValue(body)}`,
   );
 
   if (arguments.length === 3) {
+    const actualValue = body[propertyName];
+
     assert.deepStrictEqual(
-      body[propertyName],
+      actualValue,
       expectedValue,
-      `Response body property "${String(propertyName)}" did not match the expected value`,
+      `Response body property "${String(propertyName)}" did not match the expected value; expected ${formatValue(expectedValue)}, received ${formatValue(actualValue)}`,
     );
   }
 }
@@ -58,10 +69,12 @@ export function bodyPathEquals<TExpected>(
   path: string | readonly PathPart[],
   expectedValue: TExpected,
 ) {
+  const actualValue = getValueAtPath(getBody(actualBody), parsePath(path));
+
   assert.deepStrictEqual(
-    getValueAtPath(getBody(actualBody), parsePath(path)),
+    actualValue,
     expectedValue,
-    `Response body path "${formatPath(path)}" did not match the expected value`,
+    `Response body path "${formatPath(path)}" did not match the expected value; expected ${formatValue(expectedValue)}, received ${formatValue(actualValue)}`,
   );
 }
 
@@ -77,12 +90,15 @@ export function bodyIncludesProperties<TBody extends Record<string, unknown>>(
   )) {
     assert.ok(
       Object.hasOwn(body, propertyName),
-      `Expected response body to include property "${propertyName}"`,
+      `Expected response body to include property "${propertyName}"; available properties: ${formatAvailablePropertyNames(body)}; received ${formatValue(body)}`,
     );
+
+    const actualValue = body[propertyName];
+
     assert.deepStrictEqual(
-      body[propertyName],
+      actualValue,
       expectedValue,
-      `Response body property "${propertyName}" did not match the expected value`,
+      `Response body property "${propertyName}" did not match the expected value; expected ${formatValue(expectedValue)}, received ${formatValue(actualValue)}`,
     );
   }
 }
@@ -92,7 +108,7 @@ export function bodyIsArray<TItem = unknown>(
 ): asserts actualBody is TItem[] | RequestResult<TItem[]> {
   assert.ok(
     Array.isArray(getBody(actualBody)),
-    "Expected response body to be an array",
+    `Expected response body to be an array; received ${formatValue(getBody(actualBody))}`,
   );
 }
 
@@ -106,7 +122,7 @@ export function bodyArrayLengthIs<TItem = unknown>(
   assert.strictEqual(
     body.length,
     expectedLength,
-    `Response body array length did not match ${expectedLength}`,
+    `Response body array length did not match ${expectedLength}; received length ${body.length}`,
   );
 }
 
@@ -119,7 +135,7 @@ export function bodyArrayContains<TItem = unknown>(
 
   assert.ok(
     body.some((item) => isDeepStrictEqual(item, expectedItem)),
-    "Expected response body array to contain the expected item",
+    `Expected response body array to contain ${formatValue(expectedItem)}; received ${formatValue(body)}`,
   );
 }
 
@@ -131,7 +147,27 @@ export function bodyArrayContainsItemMatching<TItem = unknown>(
   bodyIsArray<TItem>(actualBody);
   const body = getBody(actualBody);
 
-  assert.ok(body.some((item) => predicate(item)), message);
+  for (const [index, item] of body.entries()) {
+    let passed: boolean;
+    try {
+      passed = predicate(item);
+    } catch (error) {
+      throw assertionErrorWithCause({
+        actual: item,
+        cause: error,
+        expected: true,
+        message: `Response body array predicate threw at index ${index} while evaluating received item ${formatValue(item)}: ${formatThrown(error)}`,
+        operator: "bodyArrayContainsItemMatching predicate",
+        stackStartFn: bodyArrayContainsItemMatching,
+      });
+    }
+
+    if (passed) {
+      return;
+    }
+  }
+
+  assert.fail(`${message}; received ${formatValue(body)}`);
 }
 
 export function bodyArrayIsNotEmpty<TItem = unknown>(
@@ -142,7 +178,7 @@ export function bodyArrayIsNotEmpty<TItem = unknown>(
 
   assert.ok(
     body.length > 0,
-    "Expected response body array to contain at least one item",
+    `Expected response body array to contain at least one item; received length ${body.length}`,
   );
 }
 
@@ -155,7 +191,7 @@ export function bodyArrayIsEmpty<TItem = unknown>(
   assert.strictEqual(
     body.length,
     0,
-    "Expected response body array to be empty",
+    `Expected response body array to be empty; received length ${body.length}`,
   );
 }
 
@@ -169,7 +205,7 @@ export function bodyHasLength(
   assert.strictEqual(
     body.length,
     expectedLength,
-    `Response body length did not match ${expectedLength}`,
+    `Response body length did not match ${expectedLength}; received length ${body.length}`,
   );
 }
 
@@ -182,7 +218,7 @@ export function bodyLengthIsGreaterThan(
   assertHasLength(body);
   assert.ok(
     body.length > expectedMinimumLength,
-    `Expected response body length to be greater than ${expectedMinimumLength}`,
+    `Expected response body length to be greater than ${expectedMinimumLength}; received length ${body.length}`,
   );
 }
 
@@ -195,7 +231,7 @@ export function bodyLengthIsAtLeast(
   assertHasLength(body);
   assert.ok(
     body.length >= expectedMinimumLength,
-    `Expected response body length to be at least ${expectedMinimumLength}`,
+    `Expected response body length to be at least ${expectedMinimumLength}; received length ${body.length}`,
   );
 }
 
@@ -208,12 +244,12 @@ export function bodyObjectIsEmpty(
 
   assert.ok(
     isObjectBody(body),
-    "Expected response body to be a non-array object",
+    `Expected response body to be a non-array object; received ${formatValue(body)}`,
   );
   assert.deepStrictEqual(
     Object.keys(body),
     [],
-    "Expected response body object to be empty",
+    `Expected response body object to be empty; received properties: ${formatAvailablePropertyNames(body)}`,
   );
 }
 
@@ -226,7 +262,7 @@ export function bodyIsNoContent(actualBody: BodyAssertionTarget<unknown>) {
 
   assert.ok(
     body == null || body === "",
-    "Expected response body to have no content",
+    `Expected response body to have no content; received ${formatValue(body)}`,
   );
 }
 
@@ -239,7 +275,7 @@ export function bodyIsEmpty(actualBody: BodyAssertionTarget<unknown>) {
 
   assert.ok(
     body == null || body === "" || isEmptyArray(body),
-    "Expected response body to be empty",
+    `Expected response body to be empty; received ${formatValue(body)}`,
   );
 }
 
@@ -248,7 +284,23 @@ export function bodyMatches<TBody>(
   predicate: (body: TBody) => boolean,
   message = "Response body did not match the expected condition",
 ) {
-  assert.ok(predicate(getBody(actualBody)), message);
+  const body = getBody(actualBody);
+
+  let passed: boolean;
+  try {
+    passed = predicate(body);
+  } catch (error) {
+    throw assertionErrorWithCause({
+      actual: body,
+      cause: error,
+      expected: true,
+      message: `Response body predicate threw while evaluating received body ${formatValue(body)}: ${formatThrown(error)}`,
+      operator: "bodyMatches predicate",
+      stackStartFn: bodyMatches,
+    });
+  }
+
+  assert.ok(passed, `${message}; received ${formatValue(body)}`);
 }
 
 function assertBodyIsObject(
@@ -256,14 +308,14 @@ function assertBodyIsObject(
 ): asserts body is Record<PropertyKey, unknown> {
   assert.ok(
     typeof body === "object" && body !== null,
-    "Expected response body to be a non-null object",
+    `Expected response body to be a non-null object; received ${formatValue(body)}`,
   );
 }
 
 function assertHasLength(body: unknown): asserts body is { length: number } {
   assert.ok(
     hasLength(body),
-    "Expected response body to have a numeric length property",
+    `Expected response body to have a numeric length property; received ${formatValue(body)}`,
   );
 }
 
@@ -400,4 +452,16 @@ function isObjectBody(body: unknown): body is Record<string, unknown> {
 
 function isEmptyArray(body: unknown): body is [] {
   return Array.isArray(body) && body.length === 0;
+}
+
+function formatAvailablePropertyNames(
+  body: Record<PropertyKey, unknown>,
+): string {
+  const propertyNames = Reflect.ownKeys(body);
+
+  if (propertyNames.length === 0) {
+    return "none";
+  }
+
+  return propertyNames.map((propertyName) => formatValue(propertyName)).join(", ");
 }

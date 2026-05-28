@@ -1,4 +1,5 @@
 import * as assert from "node:assert";
+import { formatValue } from "./format.js";
 import { getResponse, type ResponseAssertionTarget } from "./targets.js";
 
 export function responseIsOk(response: ResponseAssertionTarget) {
@@ -6,7 +7,7 @@ export function responseIsOk(response: ResponseAssertionTarget) {
 
   assert.ok(
     actual.status >= 200 && actual.status <= 299,
-    `Response not ok (outside of range 200-299), received ${actual.status}`,
+    `Response not ok (outside of range 200-299), received ${formatResponseStatus(actual)}`,
   );
 }
 
@@ -93,7 +94,7 @@ export function statusCodeIs(
   assert.strictEqual(
     actual.status,
     statusCode,
-    `Response status code ${actual.status} does not match the expected status code ${statusCode}`,
+    `Response status ${formatResponseStatus(actual)} does not match the expected status code ${statusCode}`,
   );
 }
 
@@ -105,7 +106,7 @@ export function statusCodeIsOneOf(
 
   assert.ok(
     statusCodes.includes(actual.status),
-    `Response status code ${actual.status} was not one of: ${statusCodes.join(", ")}`,
+    `Response status ${formatResponseStatus(actual)} was not one of: ${statusCodes.join(", ")}`,
   );
 }
 
@@ -118,6 +119,20 @@ export function statusCodeIsInRange(
 
   assert.ok(
     actual.status >= minStatusCode && actual.status <= maxStatusCode,
-    `Response status code ${actual.status} was not between ${minStatusCode} and ${maxStatusCode}`,
+    `Response status ${formatResponseStatus(actual)} was not between ${minStatusCode} and ${maxStatusCode}`,
   );
+}
+
+function formatResponseStatus(response: Response): string {
+  const parts = [String(response.status)];
+
+  if (response.statusText) {
+    parts.push(response.statusText);
+  }
+
+  if (response.url) {
+    parts.push(`from ${formatValue(response.url)}`);
+  }
+
+  return parts.join(" ");
 }
