@@ -13,6 +13,7 @@ import {
 } from "./requests/rq.js";
 
 import {
+  bodyArrayIsEmpty,
   bodyArrayIsNotEmpty,
   bodyArrayLengthIs,
   bodyEquals,
@@ -20,7 +21,9 @@ import {
   bodyIncludesProperties,
   bodyIsArray,
   bodyIsEmpty,
+  bodyIsNoContent,
   bodyMatches,
+  bodyObjectIsEmpty,
 } from "./assertions/body.js";
 
 import {
@@ -59,6 +62,7 @@ export {
 };
 
 export {
+  bodyArrayIsEmpty,
   bodyArrayIsNotEmpty,
   bodyArrayLengthIs,
   bodyEquals,
@@ -66,7 +70,9 @@ export {
   bodyIncludesProperties,
   bodyIsArray,
   bodyIsEmpty,
+  bodyIsNoContent,
   bodyMatches,
+  bodyObjectIsEmpty,
 };
 
 export { contentTypeIsJson, headerExists, headerIncludes, headerIs };
@@ -100,6 +106,7 @@ export const lightyRequest = {
 };
 
 export const lightyAssert = {
+  bodyArrayIsEmpty,
   bodyArrayIsNotEmpty,
   bodyArrayLengthIs,
   bodyEquals,
@@ -107,7 +114,9 @@ export const lightyAssert = {
   bodyIncludesProperties,
   bodyIsArray,
   bodyIsEmpty,
+  bodyIsNoContent,
   bodyMatches,
+  bodyObjectIsEmpty,
   contentTypeIsJson,
   headerExists,
   headerIncludes,

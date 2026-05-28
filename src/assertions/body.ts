@@ -92,11 +92,59 @@ export function bodyArrayIsNotEmpty<TItem = unknown>(
   );
 }
 
+export function bodyArrayIsEmpty<TItem = unknown>(
+  actualBody: BodyAssertionTarget<TItem[]>,
+) {
+  bodyIsArray<TItem>(actualBody);
+  const body = getBody(actualBody);
+
+  assert.strictEqual(
+    body.length,
+    0,
+    "Expected response body array to be empty",
+  );
+}
+
+export function bodyObjectIsEmpty(
+  actualBody: BodyAssertionTarget<unknown>,
+): asserts actualBody is
+  | Record<string, never>
+  | RequestResult<Record<string, never>> {
+  const body = getBody(actualBody);
+
+  assert.ok(
+    isObjectBody(body),
+    "Expected response body to be a non-array object",
+  );
+  assert.deepStrictEqual(
+    Object.keys(body),
+    [],
+    "Expected response body object to be empty",
+  );
+}
+
+/**
+ * Passes for response bodies that represent no payload: null, undefined, or "".
+ * Use responseIsNoContent to assert a 204 response status.
+ */
+export function bodyIsNoContent(actualBody: BodyAssertionTarget<unknown>) {
+  const body = getBody(actualBody);
+
+  assert.ok(
+    body == null || body === "",
+    "Expected response body to have no content",
+  );
+}
+
+/**
+ * Passes for no payload bodies (null, undefined, or "") and empty arrays.
+ * Use bodyObjectIsEmpty when an empty JSON object ({}) is expected.
+ */
 export function bodyIsEmpty(actualBody: BodyAssertionTarget<unknown>) {
   const body = getBody(actualBody);
 
   assert.ok(
-    body == null || body === "" || (Array.isArray(body) && body.length === 0),
+    body == null || body === "" || isEmptyArray(body),
     "Expected response body to be empty",
   );
 }
@@ -116,4 +164,12 @@ function assertBodyIsObject(
     typeof body === "object" && body !== null,
     "Expected response body to be a non-null object",
   );
+}
+
+function isObjectBody(body: unknown): body is Record<string, unknown> {
+  return typeof body === "object" && body !== null && !Array.isArray(body);
+}
+
+function isEmptyArray(body: unknown): body is [] {
+  return Array.isArray(body) && body.length === 0;
 }

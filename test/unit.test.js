@@ -791,13 +791,18 @@ describe("body assertions", () => {
     lightyAssert.bodyIsArray(result);
     lightyAssert.bodyArrayLengthIs(result, 2);
     lightyAssert.bodyArrayIsNotEmpty(result);
+    lightyAssert.bodyArrayIsEmpty(makeResult(200, []));
   });
 
   it("passes for empty bodies", () => {
+    lightyAssert.bodyIsNoContent(makeResult(204, undefined));
+    lightyAssert.bodyIsNoContent(makeResult(200, null));
+    lightyAssert.bodyIsNoContent(makeResult(200, ""));
     lightyAssert.bodyIsEmpty(makeResult(204, undefined));
     lightyAssert.bodyIsEmpty(makeResult(200, null));
     lightyAssert.bodyIsEmpty(makeResult(200, ""));
     lightyAssert.bodyIsEmpty(makeResult(200, []));
+    lightyAssert.bodyObjectIsEmpty(makeResult(200, {}));
   });
 
   it("passes when given raw bodies", () => {
@@ -806,6 +811,9 @@ describe("body assertions", () => {
     lightyAssert.bodyIsArray([1, 2, 3]);
     lightyAssert.bodyArrayLengthIs([1, 2, 3], 3);
     lightyAssert.bodyArrayIsNotEmpty([1]);
+    lightyAssert.bodyArrayIsEmpty([]);
+    lightyAssert.bodyObjectIsEmpty({});
+    lightyAssert.bodyIsNoContent("");
     lightyAssert.bodyMatches({ enabled: true }, (body) => body.enabled);
   });
 
@@ -874,7 +882,27 @@ describe("body assertions", () => {
       /Expected response body to be an array/,
     );
     assert.throws(
+      () => lightyAssert.bodyArrayIsEmpty(makeResult(200, [1])),
+      /Expected response body array to be empty/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyObjectIsEmpty(makeResult(200, [])),
+      /Expected response body to be a non-array object/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyObjectIsEmpty(makeResult(200, { id: 1 })),
+      /Expected response body object to be empty/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyIsNoContent(makeResult(200, [])),
+      /Expected response body to have no content/,
+    );
+    assert.throws(
       () => lightyAssert.bodyIsEmpty(makeResult(200, { id: 1 })),
+      /Expected response body to be empty/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyIsEmpty(makeResult(200, {})),
       /Expected response body to be empty/,
     );
   });
