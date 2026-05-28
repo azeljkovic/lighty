@@ -696,6 +696,25 @@ describe("response assertions", () => {
       /was not between 200 and 299/,
     );
   });
+
+  it("throws assertion failures for invalid response targets", () => {
+    const message =
+      /Expected response assertion target to be a Response or a request result/;
+
+    for (const invalidTarget of [
+      null,
+      42,
+      "not a response",
+      {},
+      { response: null },
+      { response: { status: 200, headers: {} } },
+    ]) {
+      assert.throws(() => lightyAssert.responseIsOk(invalidTarget), {
+        name: "AssertionError",
+        message,
+      });
+    }
+  });
 });
 
 describe("header assertions", () => {
@@ -734,6 +753,14 @@ describe("header assertions", () => {
       () => lightyAssert.contentTypeIsJson(result),
       /did not include "application\/json"/,
     );
+  });
+
+  it("throws assertion failures for invalid header response targets", () => {
+    assert.throws(() => lightyAssert.headerExists(null, "x-request-id"), {
+      name: "AssertionError",
+      message:
+        /Expected response assertion target to be a Response or a request result/,
+    });
   });
 });
 
