@@ -19,6 +19,7 @@ export function bodyHasProperty<TBody extends Record<string, unknown>>(
   expectedValue?: TBody[keyof TBody],
 ) {
   const body = getBody(actualBody);
+  assertBodyIsObject(body);
 
   assert.ok(
     Object.hasOwn(body, propertyName),
@@ -39,6 +40,7 @@ export function bodyIncludesProperties<TBody extends Record<string, unknown>>(
   expectedProperties: Partial<TBody>,
 ) {
   const body = getBody(actualBody);
+  assertBodyIsObject(body);
 
   for (const [propertyName, expectedValue] of Object.entries(
     expectedProperties,
@@ -103,4 +105,13 @@ export function bodyMatches<TBody>(
   message = "Response body did not match the expected condition",
 ) {
   assert.ok(predicate(getBody(actualBody)), message);
+}
+
+function assertBodyIsObject(
+  body: unknown,
+): asserts body is Record<PropertyKey, unknown> {
+  assert.ok(
+    typeof body === "object" && body !== null,
+    "Expected response body to be a non-null object",
+  );
 }

@@ -834,6 +834,24 @@ describe("body assertions", () => {
     );
   });
 
+  it("throws assertion failures for non-object property assertion bodies", () => {
+    assert.throws(
+      () => lightyAssert.bodyHasProperty(makeResult(200, null), "id"),
+      {
+        name: "AssertionError",
+        message: /Expected response body to be a non-null object/,
+      },
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyIncludesProperties(makeResult(200, null), { id: 1 }),
+      {
+        name: "AssertionError",
+        message: /Expected response body to be a non-null object/,
+      },
+    );
+  });
+
   it("throws for mismatched array and empty body expectations", () => {
     assert.throws(
       () => lightyAssert.bodyIsArray(makeResult(200, { id: 1 })),
