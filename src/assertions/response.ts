@@ -10,8 +10,24 @@ export function responseIsOk(response: ResponseAssertionTarget) {
   );
 }
 
+export function responseIsSuccessful(response: ResponseAssertionTarget) {
+  statusCodeIs2xx(response);
+}
+
+export function responseIsRedirect(response: ResponseAssertionTarget) {
+  statusCodeIs3xx(response);
+}
+
+export function responseIsClientError(response: ResponseAssertionTarget) {
+  statusCodeIs4xx(response);
+}
+
 export function responseIsCreated(response: ResponseAssertionTarget) {
   statusCodeIs(response, 201);
+}
+
+export function responseIsAccepted(response: ResponseAssertionTarget) {
+  statusCodeIs(response, 202);
 }
 
 export function responseIsNoContent(response: ResponseAssertionTarget) {
@@ -34,7 +50,37 @@ export function responseIsNotFound(response: ResponseAssertionTarget) {
   statusCodeIs(response, 404);
 }
 
+export function responseIsConflict(response: ResponseAssertionTarget) {
+  statusCodeIs(response, 409);
+}
+
+export function responseIsUnprocessableEntity(
+  response: ResponseAssertionTarget,
+) {
+  statusCodeIs(response, 422);
+}
+
+export function responseIsTooManyRequests(response: ResponseAssertionTarget) {
+  statusCodeIs(response, 429);
+}
+
 export function responseIsServerError(response: ResponseAssertionTarget) {
+  statusCodeIsInRange(response, 500, 599);
+}
+
+export function statusCodeIs2xx(response: ResponseAssertionTarget) {
+  statusCodeIsInRange(response, 200, 299);
+}
+
+export function statusCodeIs3xx(response: ResponseAssertionTarget) {
+  statusCodeIsInRange(response, 300, 399);
+}
+
+export function statusCodeIs4xx(response: ResponseAssertionTarget) {
+  statusCodeIsInRange(response, 400, 499);
+}
+
+export function statusCodeIs5xx(response: ResponseAssertionTarget) {
   statusCodeIsInRange(response, 500, 599);
 }
 

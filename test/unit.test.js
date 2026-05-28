@@ -633,14 +633,25 @@ describe("requests", () => {
 describe("response assertions", () => {
   it("passes for expected response status helpers", () => {
     lightyAssert.responseIsOk(makeResult(200));
+    lightyAssert.responseIsSuccessful(makeResult(299));
     lightyAssert.responseIsCreated(makeResult(201));
+    lightyAssert.responseIsAccepted(makeResult(202));
     lightyAssert.responseIsNoContent(makeResult(204));
+    lightyAssert.responseIsRedirect(makeResult(302));
     lightyAssert.responseIsBadRequest(makeResult(400));
     lightyAssert.responseIsUnauthorized(makeResult(401));
     lightyAssert.responseIsForbidden(makeResult(403));
     lightyAssert.responseIsNotFound(makeResult(404));
+    lightyAssert.responseIsClientError(makeResult(409));
+    lightyAssert.responseIsConflict(makeResult(409));
+    lightyAssert.responseIsUnprocessableEntity(makeResult(422));
+    lightyAssert.responseIsTooManyRequests(makeResult(429));
     lightyAssert.responseIsServerError(makeResult(503));
     lightyAssert.statusCodeIs(makeResult(202), 202);
+    lightyAssert.statusCodeIs2xx(makeResult(204));
+    lightyAssert.statusCodeIs3xx(makeResult(304));
+    lightyAssert.statusCodeIs4xx(makeResult(404));
+    lightyAssert.statusCodeIs5xx(makeResult(503));
     lightyAssert.statusCodeIsOneOf(makeResult(204), [200, 201, 204]);
     lightyAssert.statusCodeIsInRange(makeResult(299), 200, 299);
   });
@@ -656,12 +667,24 @@ describe("response assertions", () => {
       /outside of range 200-299/,
     );
     assert.throws(
+      () => lightyAssert.responseIsSuccessful(makeResult(300)),
+      /was not between 200 and 299/,
+    );
+    assert.throws(
       () => lightyAssert.responseIsCreated(makeResult(200)),
       /does not match the expected status code 201/,
     );
     assert.throws(
+      () => lightyAssert.responseIsAccepted(makeResult(200)),
+      /does not match the expected status code 202/,
+    );
+    assert.throws(
       () => lightyAssert.responseIsNoContent(makeResult(200)),
       /does not match the expected status code 204/,
+    );
+    assert.throws(
+      () => lightyAssert.responseIsRedirect(makeResult(200)),
+      /was not between 300 and 399/,
     );
     assert.throws(
       () => lightyAssert.responseIsBadRequest(makeResult(200)),
@@ -680,12 +703,44 @@ describe("response assertions", () => {
       /does not match the expected status code 404/,
     );
     assert.throws(
+      () => lightyAssert.responseIsClientError(makeResult(200)),
+      /was not between 400 and 499/,
+    );
+    assert.throws(
+      () => lightyAssert.responseIsConflict(makeResult(200)),
+      /does not match the expected status code 409/,
+    );
+    assert.throws(
+      () => lightyAssert.responseIsUnprocessableEntity(makeResult(200)),
+      /does not match the expected status code 422/,
+    );
+    assert.throws(
+      () => lightyAssert.responseIsTooManyRequests(makeResult(200)),
+      /does not match the expected status code 429/,
+    );
+    assert.throws(
       () => lightyAssert.responseIsServerError(makeResult(400)),
       /was not between 500 and 599/,
     );
     assert.throws(
       () => lightyAssert.statusCodeIs(makeResult(200), 201),
       /does not match the expected status code 201/,
+    );
+    assert.throws(
+      () => lightyAssert.statusCodeIs2xx(makeResult(300)),
+      /was not between 200 and 299/,
+    );
+    assert.throws(
+      () => lightyAssert.statusCodeIs3xx(makeResult(200)),
+      /was not between 300 and 399/,
+    );
+    assert.throws(
+      () => lightyAssert.statusCodeIs4xx(makeResult(500)),
+      /was not between 400 and 499/,
+    );
+    assert.throws(
+      () => lightyAssert.statusCodeIs5xx(makeResult(400)),
+      /was not between 500 and 599/,
     );
     assert.throws(
       () => lightyAssert.statusCodeIsOneOf(makeResult(404), [200, 201]),
@@ -727,6 +782,10 @@ describe("header assertions", () => {
     lightyAssert.headerExists(result, "x-request-id");
     lightyAssert.headerIs(result, "x-request-id", "request-123");
     lightyAssert.headerIncludes(result, "content-type", "application/json");
+    lightyAssert.headerMatches(result, "x-request-id", /^request-\d+$/);
+    lightyAssert.headerSatisfies(result, "content-type", (headerValue) =>
+      headerValue.endsWith("charset=utf-8"),
+    );
     lightyAssert.contentTypeIsJson(result);
   });
 
@@ -750,6 +809,28 @@ describe("header assertions", () => {
       /did not include "application\/json"/,
     );
     assert.throws(
+      () => lightyAssert.headerMatches(result, "x-request-id", /^trace-/),
+      /did not match \/\^trace-\//,
+    );
+    assert.throws(
+      () => lightyAssert.headerMatches(result, "x-trace-id", /^trace-/),
+      /did not match \/\^trace-\//,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.headerSatisfies(
+          result,
+          "x-request-id",
+          (headerValue) => headerValue === "request-456",
+        ),
+      /did not match the expected condition/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.headerSatisfies(result, "x-trace-id", () => true),
+      /Expected response header "x-trace-id" to exist/,
+    );
+    assert.throws(
       () => lightyAssert.contentTypeIsJson(result),
       /did not include "application\/json"/,
     );
@@ -771,6 +852,13 @@ describe("body assertions", () => {
       name: "Ada",
       active: true,
       roles: ["admin"],
+      profile: {
+        email: "ada@example.test",
+        settings: {
+          theme: "dark",
+        },
+      },
+      accounts: [{ id: "primary", active: true }],
     });
 
     lightyAssert.bodyEquals(result, {
@@ -778,10 +866,35 @@ describe("body assertions", () => {
       name: "Ada",
       active: true,
       roles: ["admin"],
+      profile: {
+        email: "ada@example.test",
+        settings: {
+          theme: "dark",
+        },
+      },
+      accounts: [{ id: "primary", active: true }],
+    });
+    lightyAssert.bodyContains(result, {
+      profile: {
+        settings: {
+          theme: "dark",
+        },
+      },
     });
     lightyAssert.bodyHasProperty(result, "id");
     lightyAssert.bodyHasProperty(result, "name", "Ada");
     lightyAssert.bodyIncludesProperties(result, { id: 1, active: true });
+    lightyAssert.bodyPathEquals(
+      result,
+      "profile.email",
+      "ada@example.test",
+    );
+    lightyAssert.bodyPathEquals(result, "$.accounts[0].id", "primary");
+    lightyAssert.bodyPathEquals(
+      result,
+      "$['profile']['settings']['theme']",
+      "dark",
+    );
     lightyAssert.bodyMatches(result, (body) => body.roles.includes("admin"));
   });
 
@@ -790,8 +903,13 @@ describe("body assertions", () => {
 
     lightyAssert.bodyIsArray(result);
     lightyAssert.bodyArrayLengthIs(result, 2);
+    lightyAssert.bodyArrayContains(result, { id: 1 });
+    lightyAssert.bodyArrayContainsItemMatching(result, (item) => item.id === 2);
     lightyAssert.bodyArrayIsNotEmpty(result);
     lightyAssert.bodyArrayIsEmpty(makeResult(200, []));
+    lightyAssert.bodyHasLength(result, 2);
+    lightyAssert.bodyLengthIsGreaterThan(result, 1);
+    lightyAssert.bodyLengthIsAtLeast(result, 2);
   });
 
   it("passes for empty bodies", () => {
@@ -810,8 +928,13 @@ describe("body assertions", () => {
     lightyAssert.bodyHasProperty({ id: 1 }, "id", 1);
     lightyAssert.bodyIsArray([1, 2, 3]);
     lightyAssert.bodyArrayLengthIs([1, 2, 3], 3);
+    lightyAssert.bodyArrayContains([1, 2, 3], 2);
+    lightyAssert.bodyArrayContainsItemMatching([1, 2, 3], (item) => item > 2);
     lightyAssert.bodyArrayIsNotEmpty([1]);
     lightyAssert.bodyArrayIsEmpty([]);
+    lightyAssert.bodyHasLength("abc", 3);
+    lightyAssert.bodyLengthIsGreaterThan("abc", 2);
+    lightyAssert.bodyLengthIsAtLeast("abc", 3);
     lightyAssert.bodyObjectIsEmpty({});
     lightyAssert.bodyIsNoContent("");
     lightyAssert.bodyMatches({ enabled: true }, (body) => body.enabled);
@@ -825,6 +948,10 @@ describe("body assertions", () => {
       /did not match the expected body/,
     );
     assert.throws(
+      () => lightyAssert.bodyContains(result, { profile: { email: "grace" } }),
+      /did not contain the expected partial body/,
+    );
+    assert.throws(
       () => lightyAssert.bodyHasProperty(result, "email"),
       /Expected response body to include property "email"/,
     );
@@ -834,6 +961,10 @@ describe("body assertions", () => {
     );
     assert.throws(
       () => lightyAssert.bodyIncludesProperties(result, { id: 2 }),
+      /did not match the expected value/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyPathEquals(result, "name", "Grace"),
       /did not match the expected value/,
     );
     assert.throws(
@@ -874,6 +1005,20 @@ describe("body assertions", () => {
       /Expected response body to be an array/,
     );
     assert.throws(
+      () => lightyAssert.bodyArrayContains(makeResult(200, [{ id: 1 }]), {
+        id: 2,
+      }),
+      /Expected response body array to contain the expected item/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyArrayContainsItemMatching(
+          makeResult(200, [{ id: 1 }]),
+          (item) => item.id === 2,
+        ),
+      /Expected response body array to contain an item matching the expected condition/,
+    );
+    assert.throws(
       () => lightyAssert.bodyArrayIsNotEmpty(makeResult(200, [])),
       /contain at least one item/,
     );
@@ -884,6 +1029,22 @@ describe("body assertions", () => {
     assert.throws(
       () => lightyAssert.bodyArrayIsEmpty(makeResult(200, [1])),
       /Expected response body array to be empty/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyHasLength(makeResult(200, [1, 2]), 1),
+      /Response body length did not match 1/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyLengthIsGreaterThan(makeResult(200, [1]), 1),
+      /Expected response body length to be greater than 1/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyLengthIsAtLeast(makeResult(200, [1]), 2),
+      /Expected response body length to be at least 2/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyHasLength(makeResult(200, { id: 1 }), 1),
+      /Expected response body to have a numeric length property/,
     );
     assert.throws(
       () => lightyAssert.bodyObjectIsEmpty(makeResult(200, [])),
