@@ -70,6 +70,7 @@ export function bodyArrayLengthIs<TItem = unknown>(
   actualBody: BodyAssertionTarget<TItem[]>,
   expectedLength: number,
 ) {
+  bodyIsArray<TItem>(actualBody);
   const body = getBody(actualBody);
 
   assert.strictEqual(
@@ -82,6 +83,7 @@ export function bodyArrayLengthIs<TItem = unknown>(
 export function bodyArrayIsNotEmpty<TItem = unknown>(
   actualBody: BodyAssertionTarget<TItem[]>,
 ) {
+  bodyIsArray<TItem>(actualBody);
   const body = getBody(actualBody);
 
   assert.ok(

@@ -862,8 +862,16 @@ describe("body assertions", () => {
       /array length did not match 1/,
     );
     assert.throws(
+      () => lightyAssert.bodyArrayLengthIs(makeResult(200, "abc"), 3),
+      /Expected response body to be an array/,
+    );
+    assert.throws(
       () => lightyAssert.bodyArrayIsNotEmpty(makeResult(200, [])),
       /contain at least one item/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyArrayIsNotEmpty("abc"),
+      /Expected response body to be an array/,
     );
     assert.throws(
       () => lightyAssert.bodyIsEmpty(makeResult(200, { id: 1 })),
