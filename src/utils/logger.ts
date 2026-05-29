@@ -14,6 +14,7 @@ const SENSITIVE_KEY_PARTS = [
   "session",
   "token",
 ];
+const NON_SENSITIVE_HEADER_KEYS = new Set(["accesscontrolallowcredentials"]);
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -84,7 +85,7 @@ export function redactHeaders(
   return Object.fromEntries(
     Object.entries(headers).map(([key, value]) => [
       key,
-      isSensitiveKey(key) ? REDACTED : value,
+      isSensitiveHeaderKey(key) ? REDACTED : value,
     ]),
   );
 }
@@ -182,6 +183,15 @@ function isSensitiveKey(key: string) {
   const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
 
   return SENSITIVE_KEY_PARTS.some((part) => normalizedKey.includes(part));
+}
+
+function isSensitiveHeaderKey(key: string) {
+  const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  return (
+    !NON_SENSITIVE_HEADER_KEYS.has(normalizedKey) &&
+    SENSITIVE_KEY_PARTS.some((part) => normalizedKey.includes(part))
+  );
 }
 
 function getActiveLogger(

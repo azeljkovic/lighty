@@ -359,6 +359,7 @@ describe("requests", () => {
           status: 200,
           headers: {
             "content-type": "application/json",
+            "access-control-allow-credentials": "true",
             "x-api-key": "response-api-key",
           },
         },
@@ -425,6 +426,7 @@ describe("requests", () => {
       assert.equal(responseName, "response");
       assert.equal(response.status, 200);
       assert.equal(response.headers["content-type"], "application/json");
+      assert.equal(response.headers["access-control-allow-credentials"], "true");
       assert.equal(response.headers["x-api-key"], "[REDACTED]");
       assert.deepEqual(response.body, {
         token: "[REDACTED]",
