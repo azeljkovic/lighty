@@ -1,5 +1,5 @@
 import * as assert from "node:assert";
-import type { RequestResult } from "../requests/rq.js";
+import type { RequestResult } from "../requests/index.js";
 
 export type ResponseAssertionTarget = Response | RequestResult<unknown>;
 export type BodyAssertionTarget<TBody = unknown> = TBody | RequestResult<TBody>;

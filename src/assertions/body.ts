@@ -1,6 +1,6 @@
 import * as assert from "node:assert";
 import { isDeepStrictEqual } from "node:util";
-import type { RequestResult } from "../requests/rq.js";
+import type { RequestResult } from "../requests/index.js";
 import {
   assertionErrorWithCause,
   formatThrown,

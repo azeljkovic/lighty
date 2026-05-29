@@ -10,7 +10,7 @@ import {
   postRequest,
   putRequest,
   request,
-} from "./requests/rq.js";
+} from "./requests/index.js";
 
 import {
   bodyArrayContains,
@@ -207,8 +207,8 @@ export type {
   RequestConfig,
   RequestResponseType,
   RequestResult,
-} from "./requests/rq.js";
-export type { HttpRequestErrorOptions } from "./requests/rq.js";
+} from "./requests/index.js";
+export type { HttpRequestErrorOptions } from "./requests/index.js";
 export type {
   RequestEndLogEntry,
   RequestLogger,
