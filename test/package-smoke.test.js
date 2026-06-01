@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 
 const testDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(testDir, "..");
+const repoRoot = resolve(testDir, "../..");
 const smokeTestTimeoutMs = 120_000;
 
 describe("package smoke test", () => {

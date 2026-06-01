@@ -1,0 +1,259 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { lightyAssert } from "../../dist/index.js";
+import { makeResult } from "../helpers/responses.js";
+
+describe("body assertions", () => {
+  it("passes for matching object bodies", () => {
+    const result = makeResult(200, {
+      id: 1,
+      name: "Ada",
+      active: true,
+      roles: ["admin"],
+      profile: {
+        email: "ada@example.test",
+        settings: {
+          theme: "dark",
+        },
+      },
+      accounts: [{ id: "primary", active: true }],
+    });
+
+    lightyAssert.bodyEquals(result, {
+      id: 1,
+      name: "Ada",
+      active: true,
+      roles: ["admin"],
+      profile: {
+        email: "ada@example.test",
+        settings: {
+          theme: "dark",
+        },
+      },
+      accounts: [{ id: "primary", active: true }],
+    });
+    lightyAssert.bodyContains(result, {
+      profile: {
+        settings: {
+          theme: "dark",
+        },
+      },
+    });
+    lightyAssert.bodyHasProperty(result, "id");
+    lightyAssert.bodyHasProperty(result, "name", "Ada");
+    lightyAssert.bodyIncludesProperties(result, { id: 1, active: true });
+    lightyAssert.bodyPathEquals(result, "profile.email", "ada@example.test");
+    lightyAssert.bodyPathEquals(result, "$.accounts[0].id", "primary");
+    lightyAssert.bodyPathEquals(
+      result,
+      "$['profile']['settings']['theme']",
+      "dark",
+    );
+    lightyAssert.bodyMatches(result, (body) => body.roles.includes("admin"));
+  });
+
+  it("passes for array bodies", () => {
+    const result = makeResult(200, [{ id: 1 }, { id: 2 }]);
+
+    lightyAssert.bodyIsArray(result);
+    lightyAssert.bodyArrayLengthIs(result, 2);
+    lightyAssert.bodyArrayContains(result, { id: 1 });
+    lightyAssert.bodyArrayContainsItemMatching(result, (item) => item.id === 2);
+    lightyAssert.bodyArrayIsNotEmpty(result);
+    lightyAssert.bodyArrayIsEmpty(makeResult(200, []));
+    lightyAssert.bodyHasLength(result, 2);
+    lightyAssert.bodyLengthIsGreaterThan(result, 1);
+    lightyAssert.bodyLengthIsAtLeast(result, 2);
+  });
+
+  it("passes for empty bodies", () => {
+    lightyAssert.bodyIsNoContent(makeResult(204, undefined));
+    lightyAssert.bodyIsNoContent(makeResult(200, null));
+    lightyAssert.bodyIsNoContent(makeResult(200, ""));
+    lightyAssert.bodyIsEmpty(makeResult(204, undefined));
+    lightyAssert.bodyIsEmpty(makeResult(200, null));
+    lightyAssert.bodyIsEmpty(makeResult(200, ""));
+    lightyAssert.bodyIsEmpty(makeResult(200, []));
+    lightyAssert.bodyObjectIsEmpty(makeResult(200, {}));
+  });
+
+  it("passes when given raw bodies", () => {
+    lightyAssert.bodyEquals({ id: 1 }, { id: 1 });
+    lightyAssert.bodyHasProperty({ id: 1 }, "id", 1);
+    lightyAssert.bodyIsArray([1, 2, 3]);
+    lightyAssert.bodyArrayLengthIs([1, 2, 3], 3);
+    lightyAssert.bodyArrayContains([1, 2, 3], 2);
+    lightyAssert.bodyArrayContainsItemMatching([1, 2, 3], (item) => item > 2);
+    lightyAssert.bodyArrayIsNotEmpty([1]);
+    lightyAssert.bodyArrayIsEmpty([]);
+    lightyAssert.bodyHasLength("abc", 3);
+    lightyAssert.bodyLengthIsGreaterThan("abc", 2);
+    lightyAssert.bodyLengthIsAtLeast("abc", 3);
+    lightyAssert.bodyObjectIsEmpty({});
+    lightyAssert.bodyIsNoContent("");
+    lightyAssert.bodyMatches({ enabled: true }, (body) => body.enabled);
+  });
+
+  it("throws for mismatched object bodies", () => {
+    const result = makeResult(200, { id: 1, name: "Ada" });
+
+    assert.throws(
+      () => lightyAssert.bodyEquals(result, { id: 2, name: "Ada" }),
+      /did not match the expected body/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyContains(result, { profile: { email: "grace" } }),
+      /did not contain the expected partial body/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyHasProperty(result, "email"),
+      /Expected response body to include property "email"; available properties: 'id', 'name'; received \{ id: 1, name: 'Ada' \}/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyHasProperty(result, "name", "Grace"),
+      /property "name" did not match the expected value; expected 'Grace', received 'Ada'/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyIncludesProperties(result, { id: 2 }),
+      /property "id" did not match the expected value; expected 2, received 1/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyPathEquals(result, "name", "Grace"),
+      /path "name" did not match the expected value; expected 'Grace', received 'Ada'/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyMatches(result, (body) => body.id === 2),
+      /did not match the expected condition; received \{ id: 1, name: 'Ada' \}/,
+    );
+  });
+
+  it("wraps body predicate exceptions with context", () => {
+    const result = makeResult(200, { id: 1, name: "Ada" });
+
+    assert.throws(
+      () => lightyAssert.bodyMatches(result, (body) => body.profile.email),
+      (error) => {
+        assert.equal(error.name, "AssertionError");
+        assert.match(
+          error.message,
+          /Response body predicate threw while evaluating received body \{ id: 1, name: 'Ada' \}: TypeError:/,
+        );
+        assert.equal(error.cause.name, "TypeError");
+        return true;
+      },
+    );
+
+    assert.throws(
+      () =>
+        lightyAssert.bodyArrayContainsItemMatching(
+          makeResult(200, [{ id: 1 }]),
+          (item) => item.profile.email,
+        ),
+      (error) => {
+        assert.equal(error.name, "AssertionError");
+        assert.match(
+          error.message,
+          /Response body array predicate threw at index 0 while evaluating received item \{ id: 1 \}: TypeError:/,
+        );
+        assert.equal(error.cause.name, "TypeError");
+        return true;
+      },
+    );
+  });
+
+  it("throws assertion failures for non-object property assertion bodies", () => {
+    assert.throws(
+      () => lightyAssert.bodyHasProperty(makeResult(200, null), "id"),
+      {
+        name: "AssertionError",
+        message: /Expected response body to be a non-null object/,
+      },
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyIncludesProperties(makeResult(200, null), { id: 1 }),
+      {
+        name: "AssertionError",
+        message: /Expected response body to be a non-null object/,
+      },
+    );
+  });
+
+  it("throws for mismatched array and empty body expectations", () => {
+    assert.throws(
+      () => lightyAssert.bodyIsArray(makeResult(200, { id: 1 })),
+      /Expected response body to be an array/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyArrayLengthIs(makeResult(200, [1, 2]), 1),
+      /array length did not match 1/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyArrayLengthIs(makeResult(200, "abc"), 3),
+      /Expected response body to be an array/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyArrayContains(makeResult(200, [{ id: 1 }]), {
+          id: 2,
+        }),
+      /Expected response body array to contain \{ id: 2 \}; received \[ \{ id: 1 \} \]/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyArrayContainsItemMatching(
+          makeResult(200, [{ id: 1 }]),
+          (item) => item.id === 2,
+        ),
+      /Expected response body array to contain an item matching the expected condition/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyArrayIsNotEmpty(makeResult(200, [])),
+      /contain at least one item/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyArrayIsNotEmpty("abc"),
+      /Expected response body to be an array/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyArrayIsEmpty(makeResult(200, [1])),
+      /Expected response body array to be empty/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyHasLength(makeResult(200, [1, 2]), 1),
+      /Response body length did not match 1/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyLengthIsGreaterThan(makeResult(200, [1]), 1),
+      /Expected response body length to be greater than 1/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyLengthIsAtLeast(makeResult(200, [1]), 2),
+      /Expected response body length to be at least 2/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyHasLength(makeResult(200, { id: 1 }), 1),
+      /Expected response body to have a numeric length property/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyObjectIsEmpty(makeResult(200, [])),
+      /Expected response body to be a non-array object/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyObjectIsEmpty(makeResult(200, { id: 1 })),
+      /Expected response body object to be empty/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyIsNoContent(makeResult(200, [])),
+      /Expected response body to have no content/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyIsEmpty(makeResult(200, { id: 1 })),
+      /Expected response body to be empty/,
+    );
+    assert.throws(
+      () => lightyAssert.bodyIsEmpty(makeResult(200, {})),
+      /Expected response body to be empty/,
+    );
+  });
+});

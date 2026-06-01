@@ -21,9 +21,11 @@
     "format": "pnpm exec prettier . --write",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "pnpm run build && node --test test/unit.test.js test/request.test.js test/package-smoke.test.js",
+    "test": "pnpm run build && node --test test/unit/*.test.js test/integration/*.test.js",
+    "test:unit": "pnpm run build && node --test test/unit/*.test.js",
+    "test:integration": "pnpm run build && node --test test/integration/*.test.js",
     "test:package": "node --test test/package-smoke.test.js",
-    "test:e2e": "pnpm run build && node --test test/e2e.test.js"
+    "test:examples": "pnpm run build && node --test examples/*.test.js"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
