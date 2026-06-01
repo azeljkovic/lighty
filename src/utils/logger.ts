@@ -18,7 +18,7 @@ const NON_SENSITIVE_HEADER_KEYS = new Set(["accesscontrolallowcredentials"]);
 
 type MaybePromise<T> = T | Promise<T>;
 
-export type RequestLoggerLevel = "off" | "basic" | "full";
+export type RequestLoggerLevel = "off" | "basic" | "verbose";
 export type RequestLoggerConfig = RequestLoggerLevel | false | RequestLogger;
 
 export interface RequestLogger {
@@ -61,10 +61,10 @@ export interface RequestEndLogEntry {
 
 const DEFAULT_LOGGER_HOOKS: Omit<RequestLogger, "level"> = {
   requestStart: (entry) => {
-    console.log(`[lighty] ${entry.method} ${entry.url} started`);
+    console.log(`[⚡️lighty] ${entry.method} ${entry.url} started`);
   },
   response: (entry) => {
-    console.log("[lighty] response", entry);
+    console.log("[⚡️lighty] response", entry);
   },
   requestEnd: (entry) => {
     const status =
@@ -74,7 +74,7 @@ const DEFAULT_LOGGER_HOOKS: Omit<RequestLogger, "level"> = {
     const error = entry.error ? `; ${entry.error.message}` : "";
 
     console.log(
-      `[lighty] ${entry.method} ${entry.url} completed in ${entry.durationMs}ms (${status}${error})`,
+      `[⚡️lighty] ${entry.method} ${entry.url} completed in ${entry.durationMs}ms (${status}${error})`,
     );
   },
 };
@@ -201,7 +201,7 @@ function getActiveLogger(
     return undefined;
   }
 
-  if (logger === undefined || logger === "basic" || logger === "full") {
+  if (logger === undefined || logger === "basic" || logger === "verbose") {
     return {
       level: logger ?? "basic",
       ...DEFAULT_LOGGER_HOOKS,
@@ -216,5 +216,5 @@ function shouldLogBasic(logger: RequestLogger) {
 }
 
 function shouldLogFull(logger: RequestLogger) {
-  return logger.level === "full";
+  return logger.level === "verbose";
 }

@@ -385,7 +385,7 @@ describe("requests", () => {
           list: [{ refreshToken: "request-refresh-token", id: 1 }],
         },
         logger: {
-          level: "full",
+          level: "verbose",
           requestStart: (entry) => events.push(["requestStart", entry]),
           response: (entry) => events.push(["response", entry]),
           requestEnd: (entry) => events.push(["requestEnd", entry]),
@@ -494,11 +494,11 @@ describe("requests", () => {
       assert.equal(logs.length, 2);
       assert.match(
         logs[0][0],
-        /^\[lighty\] GET https:\/\/example\.test\/users started$/,
+        /^\[⚡️lighty\] GET https:\/\/example\.test\/users started$/,
       );
       assert.match(
         logs[1][0],
-        /^\[lighty\] GET https:\/\/example\.test\/users completed in \d+ms \(200 ok\)$/,
+        /^\[⚡️lighty\] GET https:\/\/example\.test\/users completed in \d+ms \(200 ok\)$/,
       );
     } finally {
       console.log = originalConsoleLog;
@@ -537,26 +537,26 @@ describe("requests", () => {
       });
 
       assert.equal(logs.length, 2);
-      assert.match(logs[0][0], /^\[lighty\] GET .* started$/);
-      assert.match(logs[1][0], /^\[lighty\] GET .* completed/);
+      assert.match(logs[0][0], /^\[⚡️lighty\] GET .* started$/);
+      assert.match(logs[1][0], /^\[⚡️lighty\] GET .* completed/);
 
       logs.length = 0;
 
       await request({
         method: "GET",
         url: "https://example.test/users",
-        logger: "full",
+        logger: "verbose",
       });
 
       assert.equal(logs.length, 3);
-      assert.match(logs[0][0], /^\[lighty\] GET .* started$/);
-      assert.equal(logs[1][0], "[lighty] response");
+      assert.match(logs[0][0], /^\[⚡️lighty\] GET .* started$/);
+      assert.equal(logs[1][0], "[⚡️lighty] response");
       assert.equal(logs[1][1].headers["x-api-key"], "[REDACTED]");
       assert.deepEqual(logs[1][1].body, {
         token: "[REDACTED]",
         ok: true,
       });
-      assert.match(logs[2][0], /^\[lighty\] GET .* completed/);
+      assert.match(logs[2][0], /^\[⚡️lighty\] GET .* completed/);
     } finally {
       console.log = originalConsoleLog;
       globalThis.fetch = originalFetch;
