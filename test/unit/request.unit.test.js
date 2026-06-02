@@ -290,6 +290,7 @@ describe("requests", () => {
     t.mock.method(globalThis, "fetch", async (_url, init) => {
       const requestHeaders = new Headers(init.headers);
 
+      // asserts the outgoing request is not redacted
       assert.equal(requestHeaders.get("authorization"), "Bearer request-token");
       assert.equal(requestHeaders.get("cookie"), "session=request-cookie");
       assert.equal(
@@ -342,6 +343,7 @@ describe("requests", () => {
       },
       logger: {
         level: "verbose",
+        // hooks push their received entries into events, so the test can inspect exactly what the logger saw
         requestStart: (entry) => events.push(["requestStart", entry]),
         response: (entry) => events.push(["response", entry]),
         requestEnd: (entry) => events.push(["requestEnd", entry]),
@@ -382,6 +384,7 @@ describe("requests", () => {
     assert.equal(responseName, "response");
     assert.equal(response.status, 200);
     assert.equal(response.headers["content-type"], "application/json");
+    // access-control-allow-credentials should not be redacted, it's an exception on the allow-list
     assert.equal(response.headers["access-control-allow-credentials"], "true");
     assert.equal(response.headers["x-api-key"], "[REDACTED]");
     assert.deepEqual(response.body, {
