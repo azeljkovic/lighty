@@ -127,8 +127,8 @@ describe("requests", () => {
     assert.deepEqual(result.data, { code: "invalid_request" });
   });
 
-  it("supports explicit response types", async (t) => {
-    const fetchMock = t.mock.method(globalThis, "fetch", async () =>
+  it("parses JSON when responseType is json", async (t) => {
+    t.mock.method(globalThis, "fetch", async () =>
       textResponse(JSON.stringify({ ok: true }), {
         status: 200,
         headers: { "content-type": "text/plain" },
@@ -146,8 +146,11 @@ describe("requests", () => {
       ).data,
       { ok: true },
     );
+  });
 
-    fetchMock.mock.mockImplementation(async () => jsonResponse({ ok: true }));
+  it("returns text when responseType is text", async (t) => {
+    t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
+
     assert.equal(
       (
         await request({
@@ -159,10 +162,13 @@ describe("requests", () => {
       ).data,
       JSON.stringify({ ok: true }),
     );
+  });
 
-    fetchMock.mock.mockImplementation(async () =>
+  it("returns an ArrayBuffer when responseType is arrayBuffer", async (t) => {
+    t.mock.method(globalThis, "fetch", async () =>
       textResponse("binary", { status: 200 }),
     );
+
     const arrayBufferResult = await request({
       method: "GET",
       url: "https://example.test/array-buffer",
@@ -171,13 +177,16 @@ describe("requests", () => {
     });
     assert.ok(arrayBufferResult.data instanceof ArrayBuffer);
     assert.equal(new TextDecoder().decode(arrayBufferResult.data), "binary");
+  });
 
-    fetchMock.mock.mockImplementation(async () =>
+  it("returns a Blob when responseType is blob", async (t) => {
+    t.mock.method(globalThis, "fetch", async () =>
       textResponse("file", {
         status: 200,
         headers: { "content-type": "text/plain" },
       }),
     );
+
     const blobResult = await request({
       method: "GET",
       url: "https://example.test/blob",
@@ -187,10 +196,13 @@ describe("requests", () => {
     assert.ok(blobResult.data instanceof Blob);
     assert.equal(await blobResult.data.text(), "file");
     assert.equal(blobResult.data.type, "text/plain");
+  });
 
-    fetchMock.mock.mockImplementation(async () =>
+  it("returns a ReadableStream when responseType is stream", async (t) => {
+    t.mock.method(globalThis, "fetch", async () =>
       textResponse("streamed", { status: 200 }),
     );
+
     const streamResult = await request({
       method: "GET",
       url: "https://example.test/stream",
@@ -199,10 +211,13 @@ describe("requests", () => {
     });
     assert.ok(streamResult.data instanceof ReadableStream);
     assert.equal(await new Response(streamResult.data).text(), "streamed");
+  });
 
-    fetchMock.mock.mockImplementation(async () =>
+  it("skips parsing when responseType is none", async (t) => {
+    t.mock.method(globalThis, "fetch", async () =>
       textResponse("ignored", { status: 200 }),
     );
+
     const noneResult = await request({
       method: "GET",
       url: "https://example.test/none",
