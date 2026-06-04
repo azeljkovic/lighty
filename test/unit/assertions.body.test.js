@@ -70,10 +70,6 @@ describe("body assertions", () => {
     lightyAssert.bodyIsNoContent(makeResult(204, undefined));
     lightyAssert.bodyIsNoContent(makeResult(200, null));
     lightyAssert.bodyIsNoContent(makeResult(200, ""));
-    lightyAssert.bodyIsEmpty(makeResult(204, undefined));
-    lightyAssert.bodyIsEmpty(makeResult(200, null));
-    lightyAssert.bodyIsEmpty(makeResult(200, ""));
-    lightyAssert.bodyIsEmpty(makeResult(200, []));
     lightyAssert.bodyObjectIsEmpty(makeResult(200, {}));
   });
 
@@ -246,14 +242,6 @@ describe("body assertions", () => {
     assert.throws(
       () => lightyAssert.bodyIsNoContent(makeResult(200, [])),
       /Expected response body to have no content/,
-    );
-    assert.throws(
-      () => lightyAssert.bodyIsEmpty(makeResult(200, { id: 1 })),
-      /Expected response body to be empty/,
-    );
-    assert.throws(
-      () => lightyAssert.bodyIsEmpty(makeResult(200, {})),
-      /Expected response body to be empty/,
     );
   });
 });

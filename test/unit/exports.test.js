@@ -43,7 +43,6 @@ describe("namespace export", () => {
       "bodyHasProperty",
       "bodyIncludesProperties",
       "bodyIsArray",
-      "bodyIsEmpty",
       "bodyIsNoContent",
       "bodyLengthIsAtLeast",
       "bodyLengthIsGreaterThan",

@@ -266,19 +266,6 @@ export function bodyIsNoContent(actualBody: BodyAssertionTarget<unknown>) {
   );
 }
 
-/**
- * Passes for no payload bodies (null, undefined, or "") and empty arrays.
- * Use bodyObjectIsEmpty when an empty JSON object ({}) is expected.
- */
-export function bodyIsEmpty(actualBody: BodyAssertionTarget<unknown>) {
-  const body = getBody(actualBody);
-
-  assert.ok(
-    body == null || body === "" || isEmptyArray(body),
-    `Expected response body to be empty; received ${formatValue(body)}`,
-  );
-}
-
 export function bodyMatches<TBody>(
   actualBody: BodyAssertionTarget<TBody>,
   predicate: (body: TBody) => boolean,
@@ -448,10 +435,6 @@ function hasLength(body: unknown): body is { length: number } {
 
 function isObjectBody(body: unknown): body is Record<string, unknown> {
   return typeof body === "object" && body !== null && !Array.isArray(body);
-}
-
-function isEmptyArray(body: unknown): body is [] {
-  return Array.isArray(body) && body.length === 0;
 }
 
 function formatAvailablePropertyNames(
