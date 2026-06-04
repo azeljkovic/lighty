@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { request } from "../../dist/index.js";
+import { customRequest } from "../../dist/index.js";
 import { sendJson, withLocalHttpServer } from "../helpers/server.js";
 
 describe("timeouts", () => {
@@ -12,7 +12,7 @@ describe("timeouts", () => {
       },
       async (baseUrl) => {
         await assert.rejects(
-          request({
+          customRequest({
             method: "GET",
             url: `${baseUrl}/slow`,
             timeoutMs: 1,

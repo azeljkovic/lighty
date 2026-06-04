@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { InvalidJsonResponseError, request } from "../../dist/index.js";
+import { InvalidJsonResponseError, customRequest } from "../../dist/index.js";
 import { assertRejectsWithError } from "../helpers/errors.js";
 import { sendText, withLocalHttpServer } from "../helpers/server.js";
 
@@ -15,7 +15,7 @@ describe("invalid responses", () => {
       },
       async (baseUrl) => {
         await assertRejectsWithError(
-          request({
+          customRequest({
             method: "GET",
             url: `${baseUrl}/invalid-json`,
             logger: false,

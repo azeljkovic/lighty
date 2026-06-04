@@ -4,7 +4,7 @@ import {
   createClient,
   HttpRequestError,
   InvalidJsonResponseError,
-  request,
+  customRequest,
 } from "../../dist/index.js";
 import { jsonResponse, textResponse } from "../helpers/responses.js";
 
@@ -83,7 +83,7 @@ describe("requests", () => {
     );
 
     await assert.rejects(
-      request({
+      customRequest({
         method: "POST",
         url: "https://example.test/users",
         params: { source: "unit" },
@@ -114,7 +114,7 @@ describe("requests", () => {
       jsonResponse({ code: "invalid_request" }, { status: 400 }),
     );
 
-    const result = await request({
+    const result = await customRequest({
       method: "GET",
       url: "https://example.test/users",
       throwOnHttpError: false,
@@ -137,7 +137,7 @@ describe("requests", () => {
 
     assert.deepEqual(
       (
-        await request({
+        await customRequest({
           method: "GET",
           url: "https://example.test/json",
           responseType: "json",
@@ -153,7 +153,7 @@ describe("requests", () => {
 
     assert.equal(
       (
-        await request({
+        await customRequest({
           method: "GET",
           url: "https://example.test/text",
           responseType: "text",
@@ -169,7 +169,7 @@ describe("requests", () => {
       textResponse("binary", { status: 200 }),
     );
 
-    const arrayBufferResult = await request({
+    const arrayBufferResult = await customRequest({
       method: "GET",
       url: "https://example.test/array-buffer",
       responseType: "arrayBuffer",
@@ -187,7 +187,7 @@ describe("requests", () => {
       }),
     );
 
-    const blobResult = await request({
+    const blobResult = await customRequest({
       method: "GET",
       url: "https://example.test/blob",
       responseType: "blob",
@@ -203,7 +203,7 @@ describe("requests", () => {
       textResponse("streamed", { status: 200 }),
     );
 
-    const streamResult = await request({
+    const streamResult = await customRequest({
       method: "GET",
       url: "https://example.test/stream",
       responseType: "stream",
@@ -218,7 +218,7 @@ describe("requests", () => {
       textResponse("ignored", { status: 200 }),
     );
 
-    const noneResult = await request({
+    const noneResult = await customRequest({
       method: "GET",
       url: "https://example.test/none",
       responseType: "none",
@@ -258,7 +258,7 @@ describe("requests", () => {
     );
 
     await assert.rejects(
-      request({
+      customRequest({
         method: "GET",
         url: "https://example.test/users",
         params: { source: "unit" },
@@ -324,7 +324,7 @@ describe("requests", () => {
       );
     });
 
-    const result = await request({
+    const result = await customRequest({
       method: "POST",
       url: "https://example.test/users?access_token=query-token&visible=1",
       headers: {
@@ -407,7 +407,7 @@ describe("requests", () => {
 
     t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
 
-    await request({
+    await customRequest({
       method: "GET",
       url: "https://example.test/users",
       logger: {
@@ -426,7 +426,7 @@ describe("requests", () => {
     t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
     t.mock.method(console, "log", (...args) => logs.push(args));
 
-    await request({
+    await customRequest({
       method: "GET",
       url: "https://example.test/users",
     });
@@ -458,7 +458,7 @@ describe("requests", () => {
     );
     t.mock.method(console, "log", (...args) => logs.push(args));
 
-    await request({
+    await customRequest({
       method: "GET",
       url: "https://example.test/users",
       logger: "off",
@@ -466,7 +466,7 @@ describe("requests", () => {
 
     assert.deepEqual(logs, []);
 
-    await request({
+    await customRequest({
       method: "GET",
       url: "https://example.test/users",
       logger: "basic",
@@ -478,7 +478,7 @@ describe("requests", () => {
 
     logs.length = 0;
 
-    await request({
+    await customRequest({
       method: "GET",
       url: "https://example.test/users",
       logger: "verbose",
@@ -500,7 +500,7 @@ describe("requests", () => {
 
     t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
 
-    await request({
+    await customRequest({
       method: "GET",
       url: "https://example.test/users",
       logger: {
@@ -511,7 +511,7 @@ describe("requests", () => {
       },
     });
 
-    await request({
+    await customRequest({
       method: "GET",
       url: "https://example.test/users",
       logger: false,
@@ -536,7 +536,7 @@ describe("requests", () => {
     });
 
     await assert.rejects(
-      request({
+      customRequest({
         method: "GET",
         url: "https://example.test/resource",
         timeoutMs: 1,

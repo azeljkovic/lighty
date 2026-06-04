@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { HttpRequestError, request } from "../../dist/index.js";
+import { HttpRequestError, customRequest } from "../../dist/index.js";
 import { assertRejectsWithError } from "../helpers/errors.js";
 import {
   readJsonBody,
@@ -29,7 +29,7 @@ describe("HTTP errors", () => {
       },
       async (baseUrl) => {
         await assertRejectsWithError(
-          request({
+          customRequest({
             method: "PATCH",
             url: `${baseUrl}/users/1`,
             params: { source: "unit" },
@@ -62,7 +62,7 @@ describe("HTTP errors", () => {
       },
       async (baseUrl) => {
         await assertRejectsWithError(
-          request({
+          customRequest({
             method: "GET",
             url: `${baseUrl}/unavailable`,
             logger: false,
@@ -87,7 +87,7 @@ describe("HTTP errors", () => {
         sendJson(res, 404, { code: "not_found" });
       },
       async (baseUrl) => {
-        const result = await request({
+        const result = await customRequest({
           method: "GET",
           url: `${baseUrl}/missing`,
           throwOnHttpError: false,

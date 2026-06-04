@@ -16,7 +16,7 @@ import {
 import { getLogResponseBody, parseResponseBody } from "./response.js";
 import type { RequestConfig, RequestResult } from "./types.js";
 
-export async function request<TResponse = unknown, TBody = unknown>(
+export async function customRequest<TResponse = unknown, TBody = unknown>(
   config: RequestConfig<TBody>,
 ): Promise<RequestResult<TResponse>> {
   const url = buildRequestUrl(config.url, config.params);

@@ -1,4 +1,4 @@
-import { request } from "./request.js";
+import { customRequest } from "./customRequest.js";
 import { mergeHeaders, resolveClientUrl } from "./internals.js";
 import type {
   BodylessMethodConfig,
@@ -11,7 +11,7 @@ import type {
 export function createClient(config: ClientConfig = {}): Client {
   const clientRequest = <TResponse = unknown, TBody = unknown>(
     requestConfig: RequestConfig<TBody>,
-  ) => request<TResponse, TBody>(mergeClientConfig(config, requestConfig));
+  ) => customRequest<TResponse, TBody>(mergeClientConfig(config, requestConfig));
 
   return {
     request: clientRequest,

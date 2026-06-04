@@ -1,6 +1,6 @@
 export { createClient } from "./client.js";
 export { HttpRequestError, InvalidJsonResponseError } from "./errors.js";
-export { request } from "./request.js";
+export { customRequest } from "./customRequest.js";
 export {
   deleteRequest,
   getRequest,

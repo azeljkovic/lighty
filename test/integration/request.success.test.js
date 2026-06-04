@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { createClient, request } from "../../dist/index.js";
+import { createClient, customRequest } from "../../dist/index.js";
 import { sendEmpty, sendText, withLocalHttpServer } from "../helpers/server.js";
 
 describe("successful responses", () => {
@@ -12,7 +12,7 @@ describe("successful responses", () => {
         });
       },
       async (baseUrl) => {
-        const result = await request({
+        const result = await customRequest({
           method: "GET",
           url: `${baseUrl}/plain`,
           logger: false,
@@ -35,7 +35,7 @@ describe("successful responses", () => {
         sendEmpty(res, 204, { "x-response-kind": "no-content" });
       },
       async (baseUrl) => {
-        const result = await request({
+        const result = await customRequest({
           method: "DELETE",
           url: `${baseUrl}/empty`,
           logger: false,

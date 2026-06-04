@@ -16,7 +16,7 @@ describe("namespace export", () => {
       "patchRequest",
       "postRequest",
       "putRequest",
-      "request",
+      "customRequest",
     ];
 
     for (const exportName of requestExportNames) {
