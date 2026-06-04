@@ -61,7 +61,7 @@ export interface ClientConfig {
 }
 
 export interface Client {
-  request<TResponse = unknown, TBody = unknown>(
+  customRequest<TResponse = unknown, TBody = unknown>(
     config: RequestConfig<TBody>,
   ): Promise<RequestResult<TResponse>>;
   getRequest<TResponse = unknown>(

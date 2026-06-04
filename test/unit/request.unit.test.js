@@ -65,6 +65,39 @@ describe("requests", () => {
     assert.ok(calls[0].init.signal instanceof AbortSignal);
   });
 
+  it("exposes customRequest on clients with shared request defaults", async (t) => {
+    const calls = [];
+
+    t.mock.method(globalThis, "fetch", async (url, init) => {
+      calls.push({ url: url.toString(), init });
+
+      return jsonResponse({ ok: true });
+    });
+
+    const client = createClient({
+      baseUrl: "https://api.example.test/v1",
+      headers: {
+        Authorization: "Bearer client-token",
+      },
+      logger: false,
+    });
+
+    const result = await client.customRequest({
+      method: "POST",
+      url: "/users",
+      body: { name: "Ada" },
+    });
+
+    assert.deepEqual(result.data, { ok: true });
+    assert.equal(calls[0].url, "https://api.example.test/v1/users");
+    assert.equal(calls[0].init.method, "POST");
+    assert.equal(
+      new Headers(calls[0].init.headers).get("authorization"),
+      "Bearer client-token",
+    );
+    assert.equal(calls[0].init.body, JSON.stringify({ name: "Ada" }));
+  });
+
   it("throws HttpRequestError with parsed response details for HTTP errors", async (t) => {
     t.mock.method(globalThis, "fetch", async () =>
       jsonResponse(

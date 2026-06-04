@@ -14,7 +14,7 @@ export function createClient(config: ClientConfig = {}): Client {
   ) => customRequest<TResponse, TBody>(mergeClientConfig(config, requestConfig));
 
   return {
-    request: clientRequest,
+    customRequest: clientRequest,
     getRequest: <TResponse = unknown>(
       url: string,
       requestConfig: BodylessMethodConfig = {},
