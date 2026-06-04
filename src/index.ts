@@ -1,10 +1,8 @@
-import * as lightyAssert from "./assertions/index.js";
-import * as lightyRequest from "./requests/index.js";
-
 export * from "./assertions/index.js";
 export * from "./requests/index.js";
 
-export { lightyAssert, lightyRequest };
+export * as lightyAssert from "./assertions/index.js";
+export * as lightyRequest from "./requests/index.js";
 
 export type {
   RequestEndLogEntry,
