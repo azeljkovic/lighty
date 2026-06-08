@@ -40,6 +40,22 @@ export function bodyContains<TBody>(
   );
 }
 
+export function bodyTextContains(
+  actualBody: BodyAssertionTarget<string>,
+  expectedText: string,
+) {
+  const body = getBody(actualBody);
+
+  assert.ok(
+    typeof body === "string",
+    `Expected response body to be text; received ${formatValue(body)}`,
+  );
+  assert.ok(
+    body.includes(expectedText),
+    `Expected response body text to contain ${formatValue(expectedText)}; received ${formatValue(body)}`,
+  );
+}
+
 export function bodyHasProperty<TBody extends Record<string, unknown>>(
   actualBody: BodyAssertionTarget<TBody>,
   propertyName: keyof TBody,

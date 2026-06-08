@@ -73,6 +73,14 @@ describe("body assertions", () => {
     lightyAssert.bodyObjectIsEmpty(makeResult(200, {}));
   });
 
+  it("passes for text bodies containing the expected text", () => {
+    lightyAssert.bodyTextContains(
+      makeResult(200, "You shouldn't be here."),
+      "shouldn't be here",
+    );
+    lightyAssert.bodyTextContains("hello world", "world");
+  });
+
   it("passes when given raw bodies", () => {
     lightyAssert.bodyEquals({ id: 1 }, { id: 1 });
     lightyAssert.bodyHasProperty({ id: 1 }, "id", 1);
@@ -242,6 +250,22 @@ describe("body assertions", () => {
     assert.throws(
       () => lightyAssert.bodyIsNoContent(makeResult(200, [])),
       /Expected response body to have no content/,
+    );
+  });
+
+  it("throws for mismatched or non-text body text expectations", () => {
+    assert.throws(
+      () =>
+        lightyAssert.bodyTextContains(makeResult(200, "hello world"), "bye"),
+      /Expected response body text to contain 'bye'; received 'hello world'/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyTextContains(
+          makeResult(200, { text: "hello" }),
+          "hello",
+        ),
+      /Expected response body to be text; received \{ text: 'hello' \}/,
     );
   });
 });
