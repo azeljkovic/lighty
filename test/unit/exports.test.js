@@ -50,6 +50,7 @@ describe("namespace export", () => {
       "bodyObjectIsEmpty",
       "bodyPathEquals",
       "bodyTextContains",
+      "bodyTextMatches",
       "contentTypeIsJson",
       "headerExists",
       "headerIncludes",

@@ -81,6 +81,11 @@ describe("body assertions", () => {
     lightyAssert.bodyTextContains("hello world", "world");
   });
 
+  it("passes for text bodies matching the whole expected text", () => {
+    lightyAssert.bodyTextMatches(makeResult(200, "hello world"), "hello world");
+    lightyAssert.bodyTextMatches("request accepted", "request accepted");
+  });
+
   it("passes when given raw bodies", () => {
     lightyAssert.bodyEquals({ id: 1 }, { id: 1 });
     lightyAssert.bodyHasProperty({ id: 1 }, "id", 1);
@@ -262,6 +267,19 @@ describe("body assertions", () => {
     assert.throws(
       () =>
         lightyAssert.bodyTextContains(
+          makeResult(200, { text: "hello" }),
+          "hello",
+        ),
+      /Expected response body to be text; received \{ text: 'hello' \}/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyTextMatches(makeResult(200, "hello world"), "hello"),
+      /Response body text did not match the expected text; expected 'hello', received 'hello world'/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyTextMatches(
           makeResult(200, { text: "hello" }),
           "hello",
         ),
