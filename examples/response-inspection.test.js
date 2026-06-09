@@ -5,8 +5,8 @@ import { client } from "./client.js";
 /** @type {typeof import("../src/assertions/index.js")} */
 const lightyAssert = lightyAssertRuntime;
 
-describe("Response inspection", () => {
-  it("cache", async () => {
+describe("inspect the response data like caching and headers", () => {
+  it("returns a 304 if an If-Modified-Since header or If-None-Match is present. Returns the same as a GET otherwise.", async () => {
     const result = await client.getRequest("/cache", {
       headers: {
         "If-Modified-Since": "Wed, 21 Oct 2015 07:28:00 GMT",
@@ -19,7 +19,7 @@ describe("Response inspection", () => {
     lightyAssert.headerExists(result, "server");
   });
 
-  it("cache control", async () => {
+  it("sets a Cache-Control header for n seconds", async () => {
     const timeValue = 30;
     const result = await client.getRequest(`/cache/${timeValue}`, {});
 
@@ -34,7 +34,7 @@ describe("Response inspection", () => {
     );
   });
 
-  it("etag", async () => {
+  it("assumes the resource has the given etag and responds to If-None-Match and If-Match headers appropriately", async () => {
     const etag = "fdsdffs";
     const result = await client.getRequest(`/etag/${etag}`, {
       headers: {
@@ -48,7 +48,7 @@ describe("Response inspection", () => {
     lightyAssert.headerExists(result, "server");
   });
 
-  it("response headers", async () => {
+  it("returns a set of response headers from the query string", async () => {
     const headerName1 = "nm";
     const headerValue1 = "v";
     const headerName2 = "nm2";

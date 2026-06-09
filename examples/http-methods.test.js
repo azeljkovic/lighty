@@ -5,8 +5,8 @@ import { client } from "./client.js";
 /** @type {typeof import("../src/assertions/index.js")} */
 const lightyAssert = lightyAssertRuntime;
 
-describe("HTTP methods", () => {
-  it("makes a GET request", async () => {
+describe("testing different HTTP verbs", () => {
+  it("the request's query parameters", async () => {
     const result = await client.getRequest("/get?wh=4");
 
     // response code
@@ -31,7 +31,7 @@ describe("HTTP methods", () => {
     });
   });
 
-  it("makes a POST request", async () => {
+  it("the request's POST parameters", async () => {
     const result = await client.postRequest("/post?wh=4", {
       params: { source: "unit" },
       body: {
@@ -51,7 +51,7 @@ describe("HTTP methods", () => {
     });
   });
 
-  it("makes a PATCH request", async () => {
+  it("the request's PATCH parameters", async () => {
     const result = await client.patchRequest("/patch", {
       body: {
         name: "Ada Lovelace",
@@ -72,7 +72,7 @@ describe("HTTP methods", () => {
     lightyAssert.bodyHasLength(result.data.data, 50);
   });
 
-  it("makes a PUT request", async () => {
+  it("the request's PUT parameters", async () => {
     const result = await client.putRequest("/put", {
       body: {
         name: "Ada Lovelace",
@@ -91,7 +91,7 @@ describe("HTTP methods", () => {
     lightyAssert.bodyHasLength(result.data.data, 50);
   });
 
-  it("makes a DELETE request", async () => {
+  it("the request's DELETE parameters", async () => {
     const result = await client.deleteRequest("/delete", {});
 
     // response code
@@ -109,7 +109,7 @@ describe("HTTP methods", () => {
     lightyAssert.bodyHasLength(result.data.data, 0);
   });
 
-  it("makes a HEAD request", async () => {
+  it("the request's HEAD parameters", async () => {
     const result = await client.headRequest("/get", {});
 
     // response code

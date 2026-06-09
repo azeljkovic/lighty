@@ -5,7 +5,7 @@ import { client } from "./client.js";
 /** @type {typeof import("../src/assertions/index.js")} */
 const lightyAssert = lightyAssertRuntime;
 
-describe("Status codes", () => {
+describe("generates responses with given status code", () => {
   it("responseIsOk", async () => {
     const result = await client.getRequest("/status/200");
 

@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 /** @type {typeof import("../src/assertions/index.js")} */
 const lightyAssert = lightyAssertRuntime;
 
-describe("Response formats", () => {
+describe("returns responses in different data formats", () => {
   it("returns Brotli-encoded data", async () => {
     const result = await client.getRequest("/brotli", {});
 

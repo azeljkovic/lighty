@@ -5,8 +5,8 @@ import { client } from "./client.js";
 /** @type {typeof import("../src/assertions/index.js")} */
 const lightyAssert = lightyAssertRuntime;
 
-describe("Authentication", () => {
-  it("basic authentication - success", async () => {
+describe("auth methods", () => {
+  it("prompts the user for authorization using HTTP Basic Auth - success", async () => {
     const username = "user";
     const password = "pass";
 
@@ -29,7 +29,7 @@ describe("Authentication", () => {
     lightyAssert.bodyEquals(result, { authenticated: true, user: username });
   });
 
-  it("basic authentication - wrong credentials", async () => {
+  it("prompts the user for authorization using HTTP Basic Auth - wrong credentials", async () => {
     const username = "user";
     const password = "pass";
 
@@ -52,7 +52,7 @@ describe("Authentication", () => {
     lightyAssert.bodyIsNoContent(result);
   });
 
-  it("bearer token", async () => {
+  it("prompts the user for authorization using bearer authentication", async () => {
     const token = "tkn";
 
     const result = await client.getRequest(`/bearer`, {

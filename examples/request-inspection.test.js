@@ -5,8 +5,8 @@ import { client } from "./client.js";
 /** @type {typeof import("../src/assertions/index.js")} */
 const lightyAssert = lightyAssertRuntime;
 
-describe("Request inspection", () => {
-  it("headers", async () => {
+describe("inspect the request data", () => {
+  it("return the incoming request's HTTP headers", async () => {
     // const result = await client.getRequest("/headers");
     const result = await client.customRequest({
       method: "GET",
@@ -32,7 +32,7 @@ describe("Request inspection", () => {
     });
   });
 
-  it("ip", async () => {
+  it("returns the requester's IP Address", async () => {
     const result = await client.customRequest({
       method: "GET",
       url: "/ip",
@@ -47,7 +47,7 @@ describe("Request inspection", () => {
     lightyAssert.bodyHasProperty(result, "origin");
   });
 
-  it("user-agent", async () => {
+  it("return the incoming requests's User-Agent header", async () => {
     const result = await client.customRequest({
       method: "GET",
       url: "/user-agent",
