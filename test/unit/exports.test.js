@@ -51,7 +51,7 @@ describe("namespace export", () => {
       "bodyPathEquals",
       "bodyTextContains",
       "bodyTextMatches",
-      "contentTypeIsJson",
+      "headerContentTypeIs",
       "headerExists",
       "headerIncludes",
       "headerIs",

@@ -97,8 +97,11 @@ export function headerSatisfies(
   );
 }
 
-export function contentTypeIsJson(response: ResponseAssertionTarget) {
-  headerIncludes(response, "content-type", "application/json");
+export function headerContentTypeIs(
+  response: ResponseAssertionTarget,
+  expectedValue: string,
+) {
+  headerIs(response, "content-type", expectedValue);
 }
 
 function missingHeaderMessage(headers: Headers, headerName: string): string {

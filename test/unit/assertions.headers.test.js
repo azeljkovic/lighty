@@ -13,11 +13,11 @@ describe("header assertions", () => {
     lightyAssert.headerExists(result, "x-request-id");
     lightyAssert.headerIs(result, "x-request-id", "request-123");
     lightyAssert.headerIncludes(result, "content-type", "application/json");
+    lightyAssert.headerContentTypeIs(result, "application/json; charset=utf-8");
     lightyAssert.headerMatches(result, "x-request-id", /^request-\d+$/);
     lightyAssert.headerSatisfies(result, "content-type", (headerValue) =>
       headerValue.endsWith("charset=utf-8"),
     );
-    lightyAssert.contentTypeIsJson(result);
   });
 
   it("throws for missing or mismatched headers", () => {
@@ -40,6 +40,10 @@ describe("header assertions", () => {
       /did not include 'application\/json'; received 'text\/plain'/,
     );
     assert.throws(
+      () => lightyAssert.headerContentTypeIs(result, "application/json"),
+      /Response header "content-type" did not match the expected value; expected 'application\/json', received 'text\/plain'/,
+    );
+    assert.throws(
       () => lightyAssert.headerMatches(result, "x-request-id", /^trace-/),
       /did not match \/\^trace-\//,
     );
@@ -59,10 +63,6 @@ describe("header assertions", () => {
     assert.throws(
       () => lightyAssert.headerSatisfies(result, "x-trace-id", () => true),
       /Expected response header "x-trace-id" to exist; available headers: 'content-type', 'x-request-id'/,
-    );
-    assert.throws(
-      () => lightyAssert.contentTypeIsJson(result),
-      /did not include 'application\/json'; received 'text\/plain'/,
     );
   });
 
