@@ -212,6 +212,36 @@ describe("requests", () => {
     assert.equal(new TextDecoder().decode(arrayBufferResult.data), "binary");
   });
 
+  it("returns and logs application/octet-stream responses as an ArrayBuffer", async (t) => {
+    const events = [];
+
+    t.mock.method(
+      globalThis,
+      "fetch",
+      async () =>
+        new Response(Uint8Array.from([0, 1, 2, 255]), {
+          status: 200,
+          headers: { "content-type": "application/octet-stream" },
+        }),
+    );
+
+    const result = await customRequest({
+      method: "GET",
+      url: "https://example.test/bytes",
+      logger: {
+        level: "verbose",
+        response: (entry) => events.push(entry),
+      },
+    });
+
+    assert.ok(result.data instanceof ArrayBuffer);
+    assert.deepEqual(
+      new Uint8Array(result.data),
+      Uint8Array.from([0, 1, 2, 255]),
+    );
+    assert.deepEqual(events[0].body, Uint8Array.from([0, 1, 2, 255]));
+  });
+
   it("returns a Blob when responseType is blob", async (t) => {
     t.mock.method(globalThis, "fetch", async () =>
       textResponse("file", {

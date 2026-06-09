@@ -27,13 +27,20 @@ export async function parseResponseBody<TResponse>(
     return (await response.text()) as TResponse;
   }
 
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (
+    responseType === undefined &&
+    contentType.includes("application/octet-stream")
+  ) {
+    return (await response.arrayBuffer()) as TResponse;
+  }
+
   const text = await response.text();
 
   if (!text) {
     return undefined as TResponse;
   }
-
-  const contentType = response.headers.get("content-type") ?? "";
 
   if (responseType === "json" || contentType.includes("application/json")) {
     try {
@@ -58,7 +65,7 @@ export function getLogResponseBody<TResponse>(
   responseType?: RequestResponseType,
 ): unknown {
   if (body instanceof ArrayBuffer) {
-    return `[ArrayBuffer ${body.byteLength} bytes]`;
+    return new Uint8Array(body);
   }
 
   if (body instanceof Blob) {
