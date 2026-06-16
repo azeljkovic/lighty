@@ -19,6 +19,31 @@ export function responseIsRedirect(response: ResponseAssertionTarget) {
   statusCodeIs3xx(response);
 }
 
+export function redirectedTo(
+  response: ResponseAssertionTarget,
+  url: string | URL,
+) {
+  const actual = getResponse(response);
+  const expectedPathname = new URL(String(url), "http://lighty.local").pathname;
+
+  assert.strictEqual(
+    actual.redirected,
+    true,
+    `Response was not redirected to ${formatValue(expectedPathname)}`,
+  );
+
+  assert.ok(
+    actual.url,
+    `Response redirect target URL was empty; expected ${formatValue(expectedPathname)}`,
+  );
+
+  assert.strictEqual(
+    new URL(actual.url, "http://lighty.local").pathname,
+    expectedPathname,
+    `Response redirect target ${formatValue(actual.url)} does not match the expected path ${formatValue(expectedPathname)}`,
+  );
+}
+
 export function responseIsClientError(response: ResponseAssertionTarget) {
   statusCodeIs4xx(response);
 }

@@ -57,6 +57,7 @@ describe("namespace export", () => {
       "headerIs",
       "headerMatches",
       "headerSatisfies",
+      "redirectedTo",
       "responseIsAccepted",
       "responseIsBadRequest",
       "responseIsClientError",

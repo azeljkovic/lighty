@@ -11,6 +11,15 @@ describe("response assertions", () => {
     lightyAssert.responseIsAccepted(makeResult(202));
     lightyAssert.responseIsNoContent(makeResult(204));
     lightyAssert.responseIsRedirect(makeResult(302));
+    lightyAssert.redirectedTo(
+      {
+        status: 200,
+        headers: new Headers(),
+        redirected: true,
+        url: "https://example.test/cookies?session=lighty",
+      },
+      "/cookies",
+    );
     lightyAssert.responseIsBadRequest(makeResult(400));
     lightyAssert.responseIsUnauthorized(makeResult(401));
     lightyAssert.responseIsForbidden(makeResult(403));
@@ -69,6 +78,32 @@ describe("response assertions", () => {
     assert.throws(
       () => lightyAssert.responseIsRedirect(makeResult(200)),
       /was not between 300 and 399/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.redirectedTo(
+          {
+            status: 200,
+            headers: new Headers(),
+            redirected: false,
+            url: "https://example.test/users",
+          },
+          "/cookies",
+        ),
+      /Response was not redirected to '\/cookies'/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.redirectedTo(
+          {
+            status: 200,
+            headers: new Headers(),
+            redirected: true,
+            url: "https://example.test/users",
+          },
+          "/cookies",
+        ),
+      /does not match the expected path '\/cookies'/,
     );
     assert.throws(
       () => lightyAssert.responseIsBadRequest(makeResult(200)),
