@@ -5,77 +5,67 @@ import { client } from "./client.js";
 /** @type {typeof import("../src/assertions/index.js")} */
 const lightyAssert = lightyAssertRuntime;
 
-describe("works with cookies", () => {
-  it("returns cookie data", async () => {
-    const result = await client.getRequest("/cookies", {
-      headers: {
-        Cookie: "session=lighty; theme=dark",
-      },
-    });
+describe("returns different redirect responses", () => {
+  it("absolutely 302 redirects n times", async () => {
+    const result = await client.getRequest("/absolute-redirect/2");
 
     // response code
     lightyAssert.statusCodeIs(result, 200);
+    // redirect
+    lightyAssert.redirectedTo(result, "/get");
     // headers
     lightyAssert.headerExists(result, "server");
     lightyAssert.headerContentTypeIs(result, "application/json");
     // body
-    lightyAssert.bodyEquals(result, {
-      cookies: {
-        session: "lighty",
-        theme: "dark",
-      },
-    });
+    lightyAssert.bodyHasProperty(result, "url");
   });
 
-  it("deletes cookies provided by query parameters", async () => {
-    const result = await client.getRequest("/cookies/delete", {
+  it("302 redirects to the given URL", async () => {
+    const result = await client.getRequest("/redirect-to", {
       params: {
-        session: "123",
-        theme: "light",
+        url: "/get",
+        status_code: 302,
       },
     });
 
     // response code
     lightyAssert.statusCodeIs(result, 200);
     // redirect
-    lightyAssert.redirectedTo(result, "/cookies");
+    lightyAssert.redirectedTo(result, "/get");
     // headers
     lightyAssert.headerExists(result, "server");
     lightyAssert.headerContentTypeIs(result, "application/json");
     // body
-    lightyAssert.bodyEquals(result, { cookies: {} });
-  });
-
-  it("sets cookies provided by query parameters", async () => {
-    const result = await client.getRequest("/cookies/set", {
-      params: {
-        session: "lighty",
-        theme: "dark",
-      },
+    lightyAssert.bodyContains(result, {
+      args: {},
     });
-
-    // response code
-    lightyAssert.statusCodeIs(result, 200);
-    // redirect
-    lightyAssert.redirectedTo(result, "/cookies");
-    // headers
-    lightyAssert.headerExists(result, "server");
-    lightyAssert.headerContentTypeIs(result, "application/json");
-    // body
-    lightyAssert.bodyEquals(result, { cookies: {} });
   });
 
-  it("sets a cookie using path parameters", async () => {
-    const result = await client.getRequest("/cookies/set/session/lighty", {});
+  it("302 redirects n times", async () => {
+    const result = await client.getRequest("/redirect/2");
 
     // response code
     lightyAssert.statusCodeIs(result, 200);
     // redirect
-    lightyAssert.redirectedTo(result, "/cookies");
+    lightyAssert.redirectedTo(result, "/get");
     // headers
     lightyAssert.headerExists(result, "server");
     lightyAssert.headerContentTypeIs(result, "application/json");
     // body
-    lightyAssert.bodyEquals(result, { cookies: {} });
+    lightyAssert.bodyHasProperty(result, "url");
+  });
+
+  it("relatively 302 redirects n times", async () => {
+    const result = await client.getRequest("/relative-redirect/2");
+
+    // response code
+    lightyAssert.statusCodeIs(result, 200);
+    // redirect
+    lightyAssert.redirectedTo(result, "/get");
+    // headers
+    lightyAssert.headerExists(result, "server");
+    lightyAssert.headerContentTypeIs(result, "application/json");
+    // body
+    lightyAssert.bodyHasProperty(result, "url");
   });
 });
