@@ -86,6 +86,34 @@ describe("body assertions", () => {
     lightyAssert.bodyTextMatches("request accepted", "request accepted");
   });
 
+  it("passes for image bodies with matching content types", () => {
+    lightyAssert.bodyIsPng(
+      makeResult(200, bytes([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), {
+        "content-type": "image/png",
+      }),
+    );
+    lightyAssert.bodyIsJpeg(
+      makeResult(200, bytes([0xff, 0xd8, 0xff, 0x00, 0xff, 0xd9]), {
+        "content-type": "image/jpeg",
+      }),
+    );
+    lightyAssert.bodyIsWebp(
+      makeResult(
+        200,
+        bytes([
+          0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42,
+          0x50,
+        ]),
+        { "content-type": "image/webp" },
+      ),
+    );
+    lightyAssert.bodyIsSvg(
+      makeResult(200, "<svg><path /></svg>", {
+        "content-type": "image/svg+xml; charset=utf-8",
+      }),
+    );
+  });
+
   it("passes when given raw bodies", () => {
     lightyAssert.bodyEquals({ id: 1 }, { id: 1 });
     lightyAssert.bodyHasProperty({ id: 1 }, "id", 1);
@@ -286,4 +314,70 @@ describe("body assertions", () => {
       /Expected response body to be text; received \{ text: 'hello' \}/,
     );
   });
+
+  it("throws for mismatched image content types and bodies", () => {
+    assert.throws(
+      () =>
+        lightyAssert.bodyIsPng(
+          makeResult(200, bytes([0x89, 0x50, 0x4e, 0x47]), {
+            "content-type": "image/jpeg",
+          }),
+        ),
+      /Expected response content-type to be 'image\/png'; received 'image\/jpeg'/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyIsPng(
+          makeResult(200, bytes([0x00, 0x50, 0x4e, 0x47]), {
+            "content-type": "image/png",
+          }),
+        ),
+      /Expected response body to be a PNG image/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyIsJpeg(
+          makeResult(200, bytes([0xff, 0xd8, 0xff, 0x00, 0x00]), {
+            "content-type": "image/jpeg",
+          }),
+        ),
+      /Expected response body to be a JPEG image/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyIsWebp(
+          makeResult(
+            200,
+            bytes([
+              0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x4a, 0x50,
+              0x45, 0x47,
+            ]),
+            { "content-type": "image/webp" },
+          ),
+        ),
+      /Expected response body to be a WEBP image/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyIsSvg(
+          makeResult(200, "<html></html>", {
+            "content-type": "image/svg+xml",
+          }),
+        ),
+      /Expected response body to be an SVG image/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyIsPng(
+          makeResult(200, "not binary", {
+            "content-type": "image/png",
+          }),
+        ),
+      /Expected response body to be an ArrayBuffer/,
+    );
+  });
 });
+
+function bytes(values) {
+  return Uint8Array.from(values).buffer;
+}

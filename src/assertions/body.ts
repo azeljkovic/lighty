@@ -6,7 +6,7 @@ import {
   formatThrown,
   formatValue,
 } from "./format.js";
-import { getBody, type BodyAssertionTarget } from "./targets.js";
+import { getBody, getResponse, type BodyAssertionTarget } from "./targets.js";
 
 type PathPart = string | number;
 type DeepPartial<T> = T extends Array<infer TItem>
@@ -70,6 +70,72 @@ export function bodyTextMatches(
     body,
     expectedText,
     `Response body text did not match the expected text; expected ${formatValue(expectedText)}, received ${formatValue(body)}`,
+  );
+}
+
+/** Checks that the response is a PNG and the body starts with a PNG signature. */
+export function bodyIsPng(actualBody: RequestResult<ArrayBuffer>) {
+  assertImageContentType(actualBody, "image/png");
+
+  const bytes = bytesFromArrayBuffer(getBody(actualBody));
+
+  assert.deepStrictEqual(
+    Array.from(bytes.slice(0, 8)),
+    [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+    `Expected response body to be a PNG image; received ${formatValue(getBody(actualBody))}`,
+  );
+}
+
+/** Checks that the response is a JPEG and the body has JPEG boundary markers. */
+export function bodyIsJpeg(actualBody: RequestResult<ArrayBuffer>) {
+  assertImageContentType(actualBody, "image/jpeg");
+
+  const bytes = bytesFromArrayBuffer(getBody(actualBody));
+
+  assert.deepStrictEqual(
+    Array.from(bytes.slice(0, 3)),
+    [0xff, 0xd8, 0xff],
+    `Expected response body to be a JPEG image; received ${formatValue(getBody(actualBody))}`,
+  );
+  assert.deepStrictEqual(
+    Array.from(bytes.slice(-2)),
+    [0xff, 0xd9],
+    `Expected response body to be a JPEG image; received ${formatValue(getBody(actualBody))}`,
+  );
+}
+
+/** Checks that the response is a WEBP image inside a RIFF container. */
+export function bodyIsWebp(actualBody: RequestResult<ArrayBuffer>) {
+  assertImageContentType(actualBody, "image/webp");
+
+  const bytes = bytesFromArrayBuffer(getBody(actualBody));
+  const decoder = new TextDecoder();
+
+  assert.strictEqual(
+    decoder.decode(bytes.slice(0, 4)),
+    "RIFF",
+    `Expected response body to be a WEBP image; received ${formatValue(getBody(actualBody))}`,
+  );
+  assert.strictEqual(
+    decoder.decode(bytes.slice(8, 12)),
+    "WEBP",
+    `Expected response body to be a WEBP image; received ${formatValue(getBody(actualBody))}`,
+  );
+}
+
+/** Checks that the response is an SVG and the body contains SVG markup. */
+export function bodyIsSvg(actualBody: RequestResult<string>) {
+  assertImageContentType(actualBody, "image/svg+xml");
+
+  const body = getBody(actualBody);
+
+  assert.ok(
+    typeof body === "string",
+    `Expected response body to be SVG text; received ${formatValue(body)}`,
+  );
+  assert.ok(
+    body.includes("<svg") && body.includes("</svg>"),
+    `Expected response body to be an SVG image; received ${formatValue(body)}`,
   );
 }
 
@@ -337,6 +403,30 @@ function assertHasLength(body: unknown): asserts body is { length: number } {
     hasLength(body),
     `Expected response body to have a numeric length property; received ${formatValue(body)}`,
   );
+}
+
+function assertImageContentType(
+  actualBody: RequestResult<unknown>,
+  expectedContentType: string,
+) {
+  const response = getResponse(actualBody);
+  const contentType = response.headers.get("content-type");
+  const actualContentType = contentType?.split(";")[0]?.trim().toLowerCase();
+
+  assert.strictEqual(
+    actualContentType,
+    expectedContentType,
+    `Expected response content-type to be ${formatValue(expectedContentType)}; received ${formatValue(contentType)}`,
+  );
+}
+
+function bytesFromArrayBuffer(body: unknown): Uint8Array {
+  assert.ok(
+    body instanceof ArrayBuffer,
+    `Expected response body to be an ArrayBuffer; received ${formatValue(body)}`,
+  );
+
+  return new Uint8Array(body);
 }
 
 function deepPartialMatches(actual: unknown, expectedPartial: unknown): boolean {
