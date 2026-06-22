@@ -19,6 +19,7 @@ export type {
   RequestConfig,
   RequestParamValue,
   RequestParams,
+  RequestRedirectMode,
   RequestResponseType,
   RequestResult,
 } from "./types.js";

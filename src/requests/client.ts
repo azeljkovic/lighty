@@ -93,6 +93,7 @@ function mergeClientConfig<TBody>(
     throwOnHttpError:
       requestConfig.throwOnHttpError ?? clientConfig.throwOnHttpError,
     responseType: requestConfig.responseType ?? clientConfig.responseType,
+    redirect: requestConfig.redirect ?? clientConfig.redirect,
     logger: requestConfig.logger ?? clientConfig.logger,
   };
 }

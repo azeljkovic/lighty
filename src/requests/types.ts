@@ -16,6 +16,7 @@ export type RequestResponseType =
   | "blob"
   | "stream"
   | "none";
+export type RequestRedirectMode = "error" | "follow" | "manual";
 
 export interface RequestResult<TResponse = unknown> {
   status: number;
@@ -35,6 +36,7 @@ export interface RequestConfig<TBody = unknown> {
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   responseType?: RequestResponseType;
+  redirect?: RequestRedirectMode;
   logger?: RequestLoggerConfig;
 }
 
@@ -46,6 +48,7 @@ export interface MethodConfig<TBody = unknown> {
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   responseType?: RequestResponseType;
+  redirect?: RequestRedirectMode;
   logger?: RequestLoggerConfig;
 }
 
@@ -57,6 +60,7 @@ export interface ClientConfig {
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   responseType?: RequestResponseType;
+  redirect?: RequestRedirectMode;
   logger?: RequestLoggerConfig;
 }
 

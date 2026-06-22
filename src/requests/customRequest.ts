@@ -47,6 +47,7 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
       method: config.method,
       headers,
       body: config.body == null ? undefined : JSON.stringify(config.body),
+      redirect: config.redirect,
       signal: createRequestSignal(config.signal, config.timeoutMs),
     });
 
