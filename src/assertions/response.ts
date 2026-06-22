@@ -19,12 +19,12 @@ export function responseIsRedirect(response: ResponseAssertionTarget) {
   statusCodeIs3xx(response);
 }
 
-export function redirectedTo(
+export function responseWasRedirectedTo(
   response: ResponseAssertionTarget,
   url: string | URL,
 ) {
   const actual = getResponse(response);
-  const expectedPathname = new URL(String(url), "http://lighty.local").pathname;
+  const expectedPathname = expectedRedirectPathname(url);
 
   assert.strictEqual(
     actual.redirected,
@@ -41,6 +41,31 @@ export function redirectedTo(
     new URL(actual.url, "http://lighty.local").pathname,
     expectedPathname,
     `Response redirect target ${formatValue(actual.url)} does not match the expected path ${formatValue(expectedPathname)}`,
+  );
+}
+
+export function responseRedirectsTo(
+  response: ResponseAssertionTarget,
+  url: string | URL,
+) {
+  statusCodeIs3xx(response);
+
+  const actual = getResponse(response);
+  const location = actual.headers.get("location");
+  const expectedPathname = expectedRedirectPathname(url);
+
+  assert.ok(
+    location,
+    `Response redirect location header was empty; expected ${formatValue(expectedPathname)}`,
+  );
+
+  //The fake base URL, "http://lighty.local",
+  // is only there so relative locations like "/get" can be parsed by URL.
+  // It does not affect absolute redirect URLs.
+  assert.strictEqual(
+    new URL(location, "http://lighty.local").pathname,
+    expectedPathname,
+    `Response redirect location ${formatValue(location)} does not match the expected path ${formatValue(expectedPathname)}`,
   );
 }
 
@@ -160,4 +185,8 @@ function formatResponseStatus(response: Response): string {
   }
 
   return parts.join(" ");
+}
+
+function expectedRedirectPathname(url: string | URL): string {
+  return new URL(String(url), "http://lighty.local").pathname;
 }

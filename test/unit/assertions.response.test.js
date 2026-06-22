@@ -11,13 +11,17 @@ describe("response assertions", () => {
     lightyAssert.responseIsAccepted(makeResult(202));
     lightyAssert.responseIsNoContent(makeResult(204));
     lightyAssert.responseIsRedirect(makeResult(302));
-    lightyAssert.redirectedTo(
+    lightyAssert.responseWasRedirectedTo(
       {
         status: 200,
         headers: new Headers(),
         redirected: true,
         url: "https://example.test/cookies?session=lighty",
       },
+      "/cookies",
+    );
+    lightyAssert.responseRedirectsTo(
+      makeResult(302, undefined, { location: "/cookies" }),
       "/cookies",
     );
     lightyAssert.responseIsBadRequest(makeResult(400));
@@ -81,7 +85,7 @@ describe("response assertions", () => {
     );
     assert.throws(
       () =>
-        lightyAssert.redirectedTo(
+        lightyAssert.responseWasRedirectedTo(
           {
             status: 200,
             headers: new Headers(),
@@ -94,7 +98,7 @@ describe("response assertions", () => {
     );
     assert.throws(
       () =>
-        lightyAssert.redirectedTo(
+        lightyAssert.responseWasRedirectedTo(
           {
             status: 200,
             headers: new Headers(),
@@ -104,6 +108,22 @@ describe("response assertions", () => {
           "/cookies",
         ),
       /does not match the expected path '\/cookies'/,
+    );
+    assert.throws(
+      () => lightyAssert.responseRedirectsTo(makeResult(200), "/cookies"),
+      /was not between 300 and 399/,
+    );
+    assert.throws(
+      () => lightyAssert.responseRedirectsTo(makeResult(302), "/cookies"),
+      /Response redirect location header was empty; expected '\/cookies'/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.responseRedirectsTo(
+          makeResult(302, undefined, { location: "/users" }),
+          "/cookies",
+        ),
+      /Response redirect location '\/users' does not match the expected path '\/cookies'/,
     );
     assert.throws(
       () => lightyAssert.responseIsBadRequest(makeResult(200)),

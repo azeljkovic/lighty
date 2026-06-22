@@ -7,13 +7,27 @@ import assert from "node:assert/strict";
 const lightyAssert = lightyAssertRuntime;
 
 describe("returns different redirect responses", () => {
+  it("follows redirects to the final response", async () => {
+    const result = await client.getRequest("/redirect-to", {
+      params: {
+        url: "/get",
+        status_code: 302,
+      },
+    });
+
+    lightyAssert.responseWasRedirectedTo(result, "/get");
+    lightyAssert.statusCodeIs(result, 200);
+    lightyAssert.headerExists(result, "server");
+    lightyAssert.headerContentTypeIs(result, "application/json");
+  });
+
   it("absolutely 302 redirects n times", async () => {
     const result = await client.getRequest("/absolute-redirect/2", {
       redirect: "manual",
       responseType: "text",
     });
 
-    assertRedirectsTo(result, "/absolute-redirect/1");
+    lightyAssert.responseRedirectsTo(result, "/absolute-redirect/1");
     assert.match(result.headers.location, /^https?:\/\//);
     // headers
     lightyAssert.headerExists(result, "server");
@@ -30,7 +44,7 @@ describe("returns different redirect responses", () => {
       },
     });
 
-    assertRedirectsTo(result, "/get");
+    lightyAssert.responseRedirectsTo(result, "/get");
     // headers
     lightyAssert.headerExists(result, "server");
     lightyAssert.headerIncludes(result, "content-type", "text/html");
@@ -42,7 +56,7 @@ describe("returns different redirect responses", () => {
       responseType: "text",
     });
 
-    assertRedirectsTo(result, "/relative-redirect/1");
+    lightyAssert.responseRedirectsTo(result, "/relative-redirect/1");
     // headers
     lightyAssert.headerExists(result, "server");
     lightyAssert.headerIncludes(result, "content-type", "text/html");
@@ -54,19 +68,10 @@ describe("returns different redirect responses", () => {
       responseType: "text",
     });
 
-    assertRedirectsTo(result, "/relative-redirect/1");
+    lightyAssert.responseRedirectsTo(result, "/relative-redirect/1");
     assert.doesNotMatch(result.headers.location, /^https?:\/\//);
     // headers
     lightyAssert.headerExists(result, "server");
     lightyAssert.headerIncludes(result, "content-type", "text/html");
   });
 });
-
-function assertRedirectsTo(result, expectedPathname) {
-  lightyAssert.statusCodeIs(result, 302);
-  lightyAssert.headerExists(result, "location");
-  assert.equal(
-    new URL(result.headers.location, "http://localhost").pathname,
-    expectedPathname,
-  );
-}
