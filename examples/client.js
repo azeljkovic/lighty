@@ -4,6 +4,5 @@ export const client = createClient({
   baseUrl: "http://localhost",
   timeoutMs: 5_000,
   throwOnHttpError: false,
-  responseType: "json",
-  logger: "basic",
+  logger: "verbose",
 });
