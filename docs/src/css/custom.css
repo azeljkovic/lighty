@@ -52,3 +52,103 @@
 .header-github-link svg {
   display: none;
 }
+
+.local-search {
+  margin-left: 0.75rem;
+  position: relative;
+}
+
+.local-search__label {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.local-search__input {
+  background: var(--ifm-navbar-search-input-background-color)
+    var(--ifm-navbar-search-input-icon) no-repeat 0.75rem center / 1rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  height: 2.25rem;
+  padding: 0 0.9rem 0 2.25rem;
+  width: 13rem;
+}
+
+.local-search__input:focus {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.18);
+  outline: none;
+}
+
+.local-search__results {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  box-shadow: var(--ifm-global-shadow-md);
+  max-height: min(70vh, 28rem);
+  overflow: auto;
+  padding: 0.35rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: min(28rem, calc(100vw - 2rem));
+  z-index: var(--ifm-z-index-dropdown);
+}
+
+.local-search__result {
+  border-radius: 6px;
+  color: var(--ifm-font-color-base);
+  display: block;
+  padding: 0.65rem 0.75rem;
+  text-decoration: none;
+}
+
+.local-search__result:hover,
+.local-search__result[aria-selected='true'] {
+  background: var(--ifm-menu-color-background-active);
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+}
+
+.local-search__result-title {
+  display: block;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.local-search__result-snippet {
+  color: var(--ifm-color-emphasis-700);
+  display: block;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  margin-top: 0.25rem;
+}
+
+.local-search__empty {
+  color: var(--ifm-color-emphasis-700);
+  padding: 0.75rem;
+}
+
+@media (max-width: 996px) {
+  .local-search {
+    margin-left: 0;
+  }
+
+  .local-search__input {
+    width: 10.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .local-search__input {
+    width: 8.5rem;
+  }
+}
