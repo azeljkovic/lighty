@@ -1,0 +1,110 @@
+---
+sidebar_position: 2
+title: Getting Started
+description: Install lighty, create a client, send a request, and assert on the typed response result.
+---
+
+# Getting started
+
+Install the package:
+
+```sh
+pnpm add lighty
+```
+
+Use the equivalent command for npm, Yarn, or Bun if you do not use pnpm.
+
+## First request
+
+```ts
+import {createClient} from "lighty";
+
+type User = {
+  id: string;
+  name: string;
+  active: boolean;
+};
+
+const client = createClient({
+  baseUrl: "https://api.example.test",
+  timeoutMs: 5_000,
+  throwOnHttpError: false,
+});
+
+const result = await client.getRequest<User>("/users/ada");
+
+console.log(result.status);
+console.log(result.ok);
+console.log(result.data.name);
+```
+
+`getRequest<User>` sets the response data type for TypeScript. At runtime, `lighty` parses the response body according to `responseType` or the response `content-type` header.
+
+## Integration test example
+
+```ts
+import {describe, it} from "node:test";
+import {createClient, lightyAssert} from "lighty";
+
+const client = createClient({
+  baseUrl: "https://api.example.test",
+  timeoutMs: 5_000,
+  throwOnHttpError: false,
+});
+
+describe("users API", () => {
+  it("creates a user", async () => {
+    const result = await client.postRequest("/users", {
+      params: {
+        source: "test",
+      },
+      body: {
+        name: "Ada Lovelace",
+        active: true,
+      },
+    });
+
+    lightyAssert.statusCodeIs(result, 201);
+    lightyAssert.headerIncludes(result, "content-type", "application/json");
+    lightyAssert.bodyContains(result, {
+      name: "Ada Lovelace",
+      active: true,
+    });
+  });
+});
+```
+
+## Direct helpers
+
+Use direct helpers when you do not need a shared client:
+
+```ts
+import {getRequest, postRequest, customRequest} from "lighty";
+
+const users = await getRequest("https://api.example.test/users", {
+  params: {
+    active: true,
+  },
+});
+
+const created = await postRequest("https://api.example.test/users", {
+  body: {
+    name: "Grace Hopper",
+  },
+});
+
+const patched = await customRequest({
+  method: "PATCH",
+  url: "https://api.example.test/users/1",
+  body: {
+    active: false,
+  },
+});
+```
+
+## Choosing client or direct helpers
+
+Use `createClient` when several requests share a base URL, authentication headers, timeout, logging, or response parsing policy.
+
+Use direct helpers for one-off requests, small tests, or calls where every option is request-specific.
+

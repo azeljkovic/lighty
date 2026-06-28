@@ -1,0 +1,66 @@
+---
+sidebar_position: 1
+title: Introduction
+description: Learn what lighty provides and how its typed request helpers fit into Node.js integration tests.
+---
+
+# lighty
+
+`lighty` is a small ESM HTTP testing library for Node.js. It wraps the built-in `fetch` API with typed request helpers and returns a normalized `RequestResult` that is easy to assert against in integration tests.
+
+The request API is built around the types in `src/requests/types.ts`:
+
+- `RequestConfig` describes a complete request, including method, URL, headers, query params, body, timeout, redirect policy, response parser, and logger.
+- `MethodConfig` describes the per-request options used by method-specific helpers such as `getRequest` and `postRequest`.
+- `ClientConfig` describes defaults shared by a reusable client created with `createClient`.
+- `RequestResult<TResponse>` describes the normalized result returned by every request helper.
+- `Client` describes the complete typed client interface.
+
+## What lighty adds over raw fetch
+
+Raw `fetch` is intentionally low-level. `lighty` keeps the same platform primitives where they matter, such as `HeadersInit`, `AbortSignal`, `Response`, and `RequestRedirect`, while adding test-focused behavior:
+
+- Method helpers for `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, and `OPTIONS`.
+- Query parameter serialization with primitive values and repeated array parameters.
+- JSON request bodies by default when `body` is provided.
+- Automatic response parsing based on content type, with explicit parser overrides.
+- Normalized `status`, `ok`, `headers`, `data`, and raw `response` access.
+- HTTP error objects that keep parsed response bodies.
+- Client-level defaults for base URL, headers, timeout, redirects, error behavior, response type, and logging.
+- Built-in request logging with redaction of sensitive headers, query params, and body keys.
+
+## Primary import
+
+```ts
+import {
+  createClient,
+  customRequest,
+  getRequest,
+  postRequest,
+  HttpRequestError,
+  InvalidJsonResponseError,
+  lightyRequest,
+} from "lighty";
+```
+
+Request helpers are exported directly and through the `lightyRequest` namespace.
+
+## Requirements
+
+- Node.js 24 or newer for the library package.
+- ESM imports.
+- A test runner such as `node:test`, Vitest, Jest, or any runner that can execute ESM.
+
+## Request lifecycle
+
+Every request follows the same lifecycle:
+
+1. Resolve the URL, including client `baseUrl` if a client is used.
+2. Append `params` to the query string.
+3. Merge default headers with user headers.
+4. JSON-stringify `body` when a body is provided.
+5. Attach `signal`, `timeoutMs`, and `redirect` options to `fetch`.
+6. Parse the response body into `data`.
+7. Throw `HttpRequestError` for non-OK responses unless disabled.
+8. Return `RequestResult<TResponse>` with both normalized fields and the raw `Response`.
+

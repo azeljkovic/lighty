@@ -1,0 +1,111 @@
+---
+sidebar_position: 4
+title: Responses
+description: Understand RequestResult, responseType, automatic parsing, and access to the raw fetch Response.
+---
+
+# Responses
+
+Every request helper returns `Promise<RequestResult<TResponse>>`.
+
+```ts
+interface RequestResult<TResponse = unknown> {
+  status: number;
+  ok: boolean;
+  headers: Record<string, string>;
+  data: TResponse;
+  response: Response;
+}
+```
+
+## Result fields
+
+| Field | Description |
+| --- | --- |
+| `status` | Numeric HTTP status from the response. |
+| `ok` | Same meaning as `Response.ok`; true for status codes in the 200-299 range. |
+| `headers` | Plain object created from `response.headers.entries()`. |
+| `data` | Parsed response body. The type is controlled by `TResponse`. |
+| `response` | The original `Response` object returned by `fetch`. |
+
+## Automatic parsing
+
+When `responseType` is omitted, `lighty` uses the response headers and body content:
+
+- `application/json` responses are parsed with `JSON.parse`.
+- `application/octet-stream` responses are read as `ArrayBuffer`.
+- Empty responses return `undefined`.
+- Other responses are read as text.
+
+```ts
+const result = await client.getRequest<{id: string}>("/users/1");
+
+result.data.id;
+```
+
+## Forced responseType
+
+Use `responseType` to force a parser.
+
+```ts
+const robots = await client.getRequest<string>("/robots.txt", {
+  responseType: "text",
+});
+
+const image = await client.getRequest<ArrayBuffer>("/image.png", {
+  responseType: "arrayBuffer",
+});
+
+const stream = await client.getRequest<ReadableStream<Uint8Array> | null>(
+  "/events",
+  {
+    responseType: "stream",
+  },
+);
+```
+
+## Response type reference
+
+```ts
+type RequestResponseType =
+  | "json"
+  | "text"
+  | "arrayBuffer"
+  | "blob"
+  | "stream"
+  | "none";
+```
+
+| Type | Runtime result |
+| --- | --- |
+| `json` | Reads text and parses it as JSON. Throws `InvalidJsonResponseError` on invalid JSON. |
+| `text` | Reads with `response.text()`. |
+| `arrayBuffer` | Reads with `response.arrayBuffer()`. |
+| `blob` | Reads with `response.blob()`. |
+| `stream` | Returns `response.body`. |
+| `none` | Does not read the body and returns `undefined`. |
+
+## Empty responses
+
+When `responseType` is omitted and the response body is empty, `data` is `undefined`. This is common for `204 No Content`, `HEAD`, and some redirect or error responses.
+
+```ts
+const result = await client.deleteRequest<undefined>("/users/1");
+
+if (result.data === undefined) {
+  // No response body was returned.
+}
+```
+
+## Raw Response access
+
+Use `response` when you need fetch-specific metadata that is not copied into the normalized fields:
+
+```ts
+const result = await client.getRequest("/profile");
+
+console.log(result.response.redirected);
+console.log(result.response.type);
+console.log(result.response.url);
+```
+

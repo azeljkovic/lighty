@@ -1,0 +1,152 @@
+---
+sidebar_position: 1
+title: Request Configuration
+description: Understand RequestConfig, MethodConfig, BodylessMethodConfig, ClientConfig, and how request options are applied.
+---
+
+# Request configuration
+
+`src/requests/types.ts` defines three configuration shapes:
+
+- `RequestConfig<TBody>` is the complete shape used by `customRequest`.
+- `MethodConfig<TBody>` is used by method helpers whose method and URL are passed separately.
+- `BodylessMethodConfig` is used by helpers that should not accept a body.
+
+## RequestConfig
+
+```ts
+interface RequestConfig<TBody = unknown> {
+  method: HttpMethod;
+  url: string;
+  headers?: HeadersInit;
+  params?: RequestParams;
+  body?: TBody;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  throwOnHttpError?: boolean;
+  responseType?: RequestResponseType;
+  redirect?: RequestRedirectMode;
+  logger?: RequestLoggerConfig;
+}
+```
+
+Use `RequestConfig` with `customRequest`:
+
+```ts
+import {customRequest} from "lighty";
+
+const result = await customRequest({
+  method: "PATCH",
+  url: "https://api.example.test/users/1",
+  params: {
+    audit: true,
+  },
+  headers: {
+    Authorization: "Bearer test-token",
+  },
+  body: {
+    active: false,
+  },
+  timeoutMs: 2_000,
+  responseType: "json",
+});
+```
+
+## MethodConfig
+
+```ts
+interface MethodConfig<TBody = unknown> {
+  headers?: HeadersInit;
+  params?: RequestParams;
+  body?: TBody;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  throwOnHttpError?: boolean;
+  responseType?: RequestResponseType;
+  redirect?: RequestRedirectMode;
+  logger?: RequestLoggerConfig;
+}
+```
+
+`MethodConfig` omits `method` and `url` because method helpers provide them:
+
+```ts
+await client.postRequest("/users", {
+  body: {
+    name: "Ada Lovelace",
+  },
+});
+```
+
+`postRequest`, `putRequest`, and `patchRequest` accept `MethodConfig<TBody>` because they are intended to send request bodies.
+
+## BodylessMethodConfig
+
+```ts
+type BodylessMethodConfig = Omit<MethodConfig, "body">;
+```
+
+`getRequest`, `deleteRequest`, `headRequest`, and `optionsRequest` accept `BodylessMethodConfig`. This keeps accidental JSON bodies out of bodyless helpers at the type level.
+
+```ts
+await client.getRequest("/users", {
+  params: {
+    active: true,
+  },
+});
+```
+
+## Option reference
+
+| Option | Type | Applies to | Behavior |
+| --- | --- | --- | --- |
+| `method` | `HttpMethod` | `RequestConfig` | HTTP method passed to `fetch`. |
+| `url` | `string` | `RequestConfig` and method helper argument | Absolute URL for direct helpers, or relative/absolute URL for clients. |
+| `headers` | `HeadersInit` | All configs | Merged with defaults. User headers override default headers case-insensitively. |
+| `params` | `RequestParams` | All configs | Appended to the URL query string. |
+| `body` | `TBody` | `RequestConfig` and `MethodConfig` | JSON-stringified and sent as the request body. |
+| `signal` | `AbortSignal` | All configs | Passed to `fetch`; combined with `timeoutMs` when both are provided. |
+| `timeoutMs` | `number` | All configs | Creates an `AbortSignal.timeout(timeoutMs)`. |
+| `throwOnHttpError` | `boolean` | All configs | Defaults to throwing on non-OK HTTP responses. Set `false` to receive them as results. |
+| `responseType` | `RequestResponseType` | All configs | Forces body parsing instead of relying on `content-type`. |
+| `redirect` | `RequestRedirectMode` | All configs | Passed through to `fetch` as `redirect`. |
+| `logger` | `RequestLoggerConfig` | All configs | Controls built-in or custom request logging. |
+
+## Default request headers
+
+Every request starts with:
+
+```ts
+{
+  Accept: "application/json"
+}
+```
+
+When `body` is not `null` or `undefined`, `lighty` also adds:
+
+```ts
+{
+  "Content-Type": "application/json"
+}
+```
+
+Passing `headers` lets you override either default:
+
+```ts
+await postRequest("https://api.example.test/events", {
+  headers: {
+    Accept: "text/plain",
+    "Content-Type": "application/vnd.api+json",
+  },
+  body: {
+    type: "user.created",
+  },
+});
+```
+
+## Timeout and abort behavior
+
+If `timeoutMs` is provided, `lighty` creates a timeout signal with `AbortSignal.timeout(timeoutMs)`.
+
+If both `signal` and `timeoutMs` are provided, `lighty` combines them with `AbortSignal.any`. The request aborts when either the caller's signal or the timeout signal aborts.
+

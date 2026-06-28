@@ -1,0 +1,6 @@
+<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">lighty logo</title>
+  <rect width="160" height="160" rx="32" fill="#0A84FF"/>
+  <path d="M91 14 36 89h39l-10 57 59-80H82l9-52Z" fill="#FFFFFF"/>
+  <path d="M91 14 82 66h42l-59 80 10-57H36l55-75Z" fill="none" stroke="#101828" stroke-opacity=".18" stroke-width="6" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,104 @@
+---
+sidebar_position: 3
+title: Params and Body
+description: Serialize query parameters and JSON request bodies with the lighty request types.
+---
+
+# Params and body
+
+`RequestParams` and `RequestParamValue` describe the query parameter surface accepted by every request config.
+
+```ts
+type RequestParamValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Array<string | number | boolean>;
+
+type RequestParams = Record<string, RequestParamValue>;
+```
+
+## Query parameters
+
+`params` are appended to the request URL:
+
+```ts
+await client.getRequest("/search", {
+  params: {
+    q: "integration testing",
+    page: 2,
+    active: true,
+    tags: ["http", "node"],
+    omitted: undefined,
+    alsoOmitted: null,
+  },
+});
+```
+
+Serialization behavior:
+
+| Value | Behavior |
+| --- | --- |
+| `string` | Converted with `String(value)` and set once. |
+| `number` | Converted with `String(value)` and set once. |
+| `boolean` | Converted to `"true"` or `"false"` and set once. |
+| `Array<string \| number \| boolean>` | Appended as repeated query parameters. |
+| `null` | Skipped. |
+| `undefined` | Skipped. |
+
+For the example above, the resulting URL contains:
+
+```text
+?q=integration+testing&page=2&active=true&tags=http&tags=node
+```
+
+## Existing URL search params
+
+You can pass a URL that already has query parameters. Scalar `params` use `URLSearchParams.set`, so they replace an existing value for the same key. Array values use `append`, so they add repeated values.
+
+```ts
+await getRequest("https://api.example.test/users?page=1", {
+  params: {
+    page: 2,
+    role: ["admin", "editor"],
+  },
+});
+```
+
+## JSON request bodies
+
+When `body` is provided, `lighty` sends `JSON.stringify(body)` to `fetch`.
+
+```ts
+await client.postRequest("/users", {
+  body: {
+    name: "Grace Hopper",
+    active: true,
+  },
+});
+```
+
+`Content-Type: application/json` is added automatically when `body` is not `null` or `undefined`.
+
+## Body-capable helpers
+
+These helpers accept `MethodConfig<TBody>`:
+
+- `customRequest`
+- `postRequest`
+- `putRequest`
+- `patchRequest`
+
+These helpers accept `BodylessMethodConfig`, which omits `body`:
+
+- `getRequest`
+- `deleteRequest`
+- `headRequest`
+- `optionsRequest`
+
+## Non-JSON bodies
+
+The current request implementation serializes provided bodies as JSON. If you need multipart, raw text, binary uploads, or streaming request bodies, use native `fetch` directly or add a dedicated lighty helper that changes the body serialization behavior.
+

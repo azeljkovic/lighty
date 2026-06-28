@@ -1,0 +1,155 @@
+---
+sidebar_position: 5
+title: Errors and Logging
+description: Configure HTTP error behavior, invalid JSON errors, redirects, and request logging.
+---
+
+# Errors and logging
+
+The request types expose two important behavior switches:
+
+- `throwOnHttpError` controls non-OK HTTP responses.
+- `logger` controls built-in or custom request logging.
+
+## HTTP errors
+
+By default, a response with `ok === false` throws `HttpRequestError` after its body has been parsed.
+
+```ts
+import {HttpRequestError, patchRequest} from "lighty";
+
+try {
+  await patchRequest("https://api.example.test/users/1", {
+    body: {
+      email: "",
+    },
+  });
+} catch (error) {
+  if (error instanceof HttpRequestError) {
+    console.log(error.status);
+    console.log(error.statusText);
+    console.log(error.headers);
+    console.log(error.body);
+    console.log(error.url);
+  }
+}
+```
+
+The error body uses the same parser selected by `responseType` or automatic parsing.
+
+## Returning non-OK responses
+
+Set `throwOnHttpError: false` to receive non-OK responses as `RequestResult` values.
+
+```ts
+const result = await client.getRequest("/missing", {
+  throwOnHttpError: false,
+});
+
+if (result.status === 404) {
+  console.log(result.data);
+}
+```
+
+This setting can be defined on `ClientConfig` and overridden per request.
+
+## Invalid JSON
+
+When a response is parsed as JSON and parsing fails, `lighty` throws `InvalidJsonResponseError`.
+
+This happens when:
+
+- `responseType` is `"json"`, or
+- `responseType` is omitted and the `content-type` header includes `application/json`.
+
+The error includes:
+
+- `status`
+- `statusText`
+- `headers`
+- `body`, containing the raw response text
+- `url`
+- `cause`, containing the original JSON parse error
+
+## Redirects
+
+`redirect` is passed directly to `fetch`.
+
+```ts
+const result = await client.getRequest("/redirect-to", {
+  redirect: "manual",
+  responseType: "text",
+  params: {
+    url: "/login",
+    status_code: 302,
+  },
+});
+```
+
+Supported values are:
+
+```ts
+type RequestRedirectMode = "error" | "follow" | "manual";
+```
+
+## Logger configuration
+
+`logger` is typed as `RequestLoggerConfig` from `src/utils/logger.ts`:
+
+```ts
+type RequestLoggerLevel = "off" | "basic" | "verbose";
+type RequestLoggerConfig = RequestLoggerLevel | false | RequestLogger;
+```
+
+Built-in levels:
+
+| Level | Behavior |
+| --- | --- |
+| `basic` | Logs request start and request completion. This is the default when `logger` is omitted. |
+| `verbose` | Logs request start, parsed response details, and request completion. |
+| `off` | Disables logging. |
+| `false` | Also disables logging. |
+
+Disable logging for a request:
+
+```ts
+await client.getRequest("/users", {
+  logger: "off",
+});
+```
+
+## Custom logger hooks
+
+```ts
+const events: unknown[] = [];
+
+await client.postRequest("/users", {
+  body: {
+    username: "ada",
+    password: "secret",
+  },
+  logger: {
+    level: "verbose",
+    requestStart: (entry) => events.push(["requestStart", entry]),
+    response: (entry) => events.push(["response", entry]),
+    requestEnd: (entry) => events.push(["requestEnd", entry]),
+  },
+});
+```
+
+Logger hooks can be synchronous or asynchronous.
+
+## Redaction
+
+Before data reaches logger hooks, `lighty` redacts sensitive values from:
+
+- Header names containing terms such as `authorization`, `cookie`, `password`, `secret`, `session`, `token`, or `apiKey`.
+- Query parameter names containing sensitive terms.
+- Body object keys containing sensitive terms, recursively.
+
+The redacted value is:
+
+```text
+[REDACTED]
+```
+

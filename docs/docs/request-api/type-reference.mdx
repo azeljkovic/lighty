@@ -1,0 +1,250 @@
+---
+sidebar_position: 6
+title: Type Reference
+description: Complete reference for the request types exported from src/requests/types.ts.
+---
+
+# Type reference
+
+This page documents the public request types in `src/requests/types.ts`.
+
+## RequestParamValue
+
+```ts
+type RequestParamValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Array<string | number | boolean>;
+```
+
+Represents a single query parameter value accepted by `params`.
+
+`null` and `undefined` values are ignored. Arrays are serialized as repeated query parameters.
+
+## RequestParams
+
+```ts
+type RequestParams = Record<string, RequestParamValue>;
+```
+
+Map of query parameter names to serializable values.
+
+```ts
+const params: RequestParams = {
+  search: "ada",
+  page: 1,
+  active: true,
+  tags: ["users", "tests"],
+  skipped: undefined,
+};
+```
+
+## RequestResponseType
+
+```ts
+type RequestResponseType =
+  | "json"
+  | "text"
+  | "arrayBuffer"
+  | "blob"
+  | "stream"
+  | "none";
+```
+
+Controls how `lighty` reads the response body.
+
+| Value | Parser |
+| --- | --- |
+| `json` | `response.text()` followed by `JSON.parse`. |
+| `text` | `response.text()`. |
+| `arrayBuffer` | `response.arrayBuffer()`. |
+| `blob` | `response.blob()`. |
+| `stream` | Returns `response.body`. |
+| `none` | Returns `undefined` without reading the body. |
+
+## RequestRedirectMode
+
+```ts
+type RequestRedirectMode = "error" | "follow" | "manual";
+```
+
+Passed to the underlying `fetch` call as the `redirect` option.
+
+## RequestResult
+
+```ts
+interface RequestResult<TResponse = unknown> {
+  status: number;
+  ok: boolean;
+  headers: Record<string, string>;
+  data: TResponse;
+  response: Response;
+}
+```
+
+Returned by every request helper.
+
+```ts
+type User = {
+  id: string;
+  name: string;
+};
+
+const result: RequestResult<User> = await client.getRequest<User>("/users/1");
+
+result.status;
+result.ok;
+result.headers["content-type"];
+result.data.name;
+result.response.url;
+```
+
+## RequestConfig
+
+```ts
+interface RequestConfig<TBody = unknown> {
+  method: HttpMethod;
+  url: string;
+  headers?: HeadersInit;
+  params?: RequestParams;
+  body?: TBody;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  throwOnHttpError?: boolean;
+  responseType?: RequestResponseType;
+  redirect?: RequestRedirectMode;
+  logger?: RequestLoggerConfig;
+}
+```
+
+The complete request config accepted by `customRequest`.
+
+| Property | Required | Description |
+| --- | --- | --- |
+| `method` | Yes | HTTP method. The `HttpMethod` type is exported from `src/types.ts`. |
+| `url` | Yes | Absolute request URL for direct requests. With a client, relative URLs can be resolved through `baseUrl`. |
+| `headers` | No | Any `HeadersInit` accepted by `fetch`: plain object, tuple array, or `Headers`. |
+| `params` | No | Query parameters appended to `url`. |
+| `body` | No | Request body, serialized with `JSON.stringify`. |
+| `signal` | No | Abort signal passed to `fetch`. |
+| `timeoutMs` | No | Timeout in milliseconds. |
+| `throwOnHttpError` | No | Set `false` to return non-OK responses instead of throwing. |
+| `responseType` | No | Explicit response parser. |
+| `redirect` | No | Fetch redirect behavior. |
+| `logger` | No | Logger level, disabled flag, or custom logger. |
+
+## MethodConfig
+
+```ts
+interface MethodConfig<TBody = unknown> {
+  headers?: HeadersInit;
+  params?: RequestParams;
+  body?: TBody;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  throwOnHttpError?: boolean;
+  responseType?: RequestResponseType;
+  redirect?: RequestRedirectMode;
+  logger?: RequestLoggerConfig;
+}
+```
+
+Used by method-specific helpers where the helper supplies the method and receives URL as a positional argument.
+
+```ts
+await postRequest<{id: string}, {name: string}>("/users", {
+  body: {
+    name: "Ada",
+  },
+});
+```
+
+## BodylessMethodConfig
+
+```ts
+type BodylessMethodConfig = Omit<MethodConfig, "body">;
+```
+
+Used by bodyless method helpers.
+
+```ts
+await getRequest("/users", {
+  params: {
+    active: true,
+  },
+});
+```
+
+TypeScript rejects `body` on helpers that use `BodylessMethodConfig`.
+
+## ClientConfig
+
+```ts
+interface ClientConfig {
+  baseUrl?: string;
+  headers?: HeadersInit;
+  timeoutMs?: number;
+  throwOnHttpError?: boolean;
+  responseType?: RequestResponseType;
+  redirect?: RequestRedirectMode;
+  logger?: RequestLoggerConfig;
+}
+```
+
+Defaults shared by a client returned from `createClient`.
+
+`baseUrl` exists only on `ClientConfig`; individual requests use `url`.
+
+## Client
+
+```ts
+interface Client {
+  customRequest<TResponse = unknown, TBody = unknown>(
+    config: RequestConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+  getRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+  postRequest<TResponse = unknown, TBody = unknown>(
+    url: string,
+    config?: MethodConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+  putRequest<TResponse = unknown, TBody = unknown>(
+    url: string,
+    config?: MethodConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+  patchRequest<TResponse = unknown, TBody = unknown>(
+    url: string,
+    config?: MethodConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+  deleteRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+  headRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+  optionsRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+}
+```
+
+## Related imported types
+
+`types.ts` imports these public platform and library types:
+
+| Type | Source | Role |
+| --- | --- | --- |
+| `HttpMethod` | `src/types.ts` | Restricts request methods to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, and `HEAD`. |
+| `RequestLoggerConfig` | `src/utils/logger.ts` | Configures built-in or custom logging. |
+| `HeadersInit` | Fetch/Web API | Accepts the same header inputs as native `fetch`. |
+| `AbortSignal` | Fetch/Web API | Allows caller-driven cancellation and timeout composition. |
+| `Response` | Fetch/Web API | Exposes the raw fetch response on `RequestResult.response`. |
+

@@ -1,0 +1,170 @@
+---
+sidebar_position: 2
+title: Client
+description: Create a typed lighty client with shared defaults and method-specific request helpers.
+---
+
+# Client
+
+`createClient(config?: ClientConfig)` returns a `Client` object with typed request methods. It is the best fit for integration tests that call the same service repeatedly.
+
+## ClientConfig
+
+```ts
+interface ClientConfig {
+  baseUrl?: string;
+  headers?: HeadersInit;
+  timeoutMs?: number;
+  throwOnHttpError?: boolean;
+  responseType?: RequestResponseType;
+  redirect?: RequestRedirectMode;
+  logger?: RequestLoggerConfig;
+}
+```
+
+Client options are defaults. Per-request options override them.
+
+```ts
+import {createClient} from "lighty";
+
+const client = createClient({
+  baseUrl: "https://api.example.test/v1",
+  headers: {
+    Authorization: "Bearer test-token",
+  },
+  timeoutMs: 5_000,
+  throwOnHttpError: false,
+  responseType: "json",
+  redirect: "follow",
+  logger: "basic",
+});
+```
+
+## URL resolution
+
+When `baseUrl` is set, relative request URLs are resolved against it:
+
+```ts
+const client = createClient({
+  baseUrl: "https://api.example.test/v1",
+});
+
+await client.getRequest("/users");
+// Fetches https://api.example.test/v1/users
+```
+
+Absolute URLs are left unchanged:
+
+```ts
+await client.getRequest("https://status.example.test/health");
+```
+
+## Header merging
+
+Client headers and request headers are merged case-insensitively. Request headers win.
+
+```ts
+const client = createClient({
+  headers: {
+    Authorization: "Bearer shared-token",
+    Accept: "application/json",
+  },
+});
+
+await client.getRequest("/users", {
+  headers: {
+    authorization: "Bearer request-token",
+  },
+});
+```
+
+The request sends the request-level authorization header and does not keep the old differently-cased key.
+
+## Client methods
+
+```ts
+interface Client {
+  customRequest<TResponse = unknown, TBody = unknown>(
+    config: RequestConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+
+  getRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+
+  postRequest<TResponse = unknown, TBody = unknown>(
+    url: string,
+    config?: MethodConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+
+  putRequest<TResponse = unknown, TBody = unknown>(
+    url: string,
+    config?: MethodConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+
+  patchRequest<TResponse = unknown, TBody = unknown>(
+    url: string,
+    config?: MethodConfig<TBody>,
+  ): Promise<RequestResult<TResponse>>;
+
+  deleteRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+
+  headRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+
+  optionsRequest<TResponse = unknown>(
+    url: string,
+    config?: BodylessMethodConfig,
+  ): Promise<RequestResult<TResponse>>;
+}
+```
+
+## Typed responses and bodies
+
+The first generic controls `result.data`. For body-capable helpers, the second generic controls the request body type.
+
+```ts
+type CreateUserBody = {
+  name: string;
+  active: boolean;
+};
+
+type User = {
+  id: string;
+  name: string;
+  active: boolean;
+};
+
+const result = await client.postRequest<User, CreateUserBody>("/users", {
+  body: {
+    name: "Ada Lovelace",
+    active: true,
+  },
+});
+
+result.data.id;
+```
+
+## Overriding client defaults
+
+```ts
+const client = createClient({
+  baseUrl: "https://api.example.test",
+  timeoutMs: 5_000,
+  throwOnHttpError: true,
+});
+
+const result = await client.getRequest("/missing", {
+  timeoutMs: 500,
+  throwOnHttpError: false,
+});
+```
+
+The request uses the shorter timeout and returns a `RequestResult` for a non-OK response.
+
