@@ -269,17 +269,12 @@
 }
 
 .section,
-.band,
 .cta {
   padding: 4.5rem 0;
 }
 
 .section {
   background: var(--ifm-background-color);
-}
-
-.band {
-  background: var(--ifm-color-emphasis-100);
 }
 
 .sectionHeader {
@@ -328,26 +323,6 @@
   line-height: 1.6;
 }
 
-.runtimeGrid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.runtimePill {
-  display: flex;
-  min-height: 3.25rem;
-  align-items: center;
-  justify-content: center;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 8px;
-  background: var(--ifm-background-color);
-  color: var(--ifm-color-emphasis-800);
-  font-weight: 800;
-  text-align: center;
-}
-
 .codeGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -393,11 +368,6 @@
   border-color: rgba(255, 255, 255, 0.22);
 }
 
-[data-theme='dark'] .band {
-  background: #111827;
-}
-
-[data-theme='dark'] .runtimePill,
 [data-theme='dark'] .featureCard {
   border-color: rgba(255, 255, 255, 0.1);
   background: #0f172a;
@@ -430,9 +400,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .runtimeGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media screen and (max-width: 640px) {
@@ -460,13 +427,11 @@
     width: 100%;
   }
 
-  .featureGrid,
-  .runtimeGrid {
+  .featureGrid {
     grid-template-columns: 1fr;
   }
 
   .section,
-  .band,
   .cta {
     padding: 3rem 0;
   }

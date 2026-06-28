@@ -55,21 +55,6 @@ const features = [
   },
 ];
 
-const runtimes = [
-  'Node.js 24+',
-  'ESM',
-  'node:test',
-  'Vitest',
-  'Jest',
-  'TypeScript',
-  'Fetch API',
-  'JSON',
-  'Text',
-  'ArrayBuffer',
-  'Blob',
-  'Streams',
-];
-
 const installCommands = [
   'pnpm add lighty',
   'npm install lighty',
@@ -250,26 +235,6 @@ function FeatureSection() {
   );
 }
 
-function RuntimeSection() {
-  return (
-    <section className={styles.band}>
-      <div className="container">
-        <div className={styles.sectionHeader}>
-          <Heading as="h2">Built around platform primitives</Heading>
-          <p>Use it with modern Node.js, ESM tests, and any runner that can execute them.</p>
-        </div>
-        <div className={styles.runtimeGrid}>
-          {runtimes.map((runtime) => (
-            <span className={styles.runtimePill} key={runtime}>
-              {runtime}
-            </span>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function CodeSection() {
   return (
     <section className={styles.section}>
@@ -349,7 +314,6 @@ export default function Home(): ReactNode {
       <HomepageHeader />
       <main>
         <FeatureSection />
-        <RuntimeSection />
         <CodeSection />
         <CommunitySection />
       </main>
