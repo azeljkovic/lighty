@@ -1,4 +1,4 @@
-import type {ReactNode} from 'react';
+import {useEffect, useState, type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
@@ -70,9 +70,36 @@ const runtimes = [
   'Streams',
 ];
 
+const installCommands = [
+  'pnpm add lighty',
+  'npm install lighty',
+  'yarn add lighty',
+];
+
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
   const logoUrl = useBaseUrl('/img/logo.svg');
+  const [installCopied, setInstallCopied] = useState(false);
+  const [installCommandIndex, setInstallCommandIndex] = useState(0);
+  const installCommand = installCommands[installCommandIndex];
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setInstallCommandIndex((index) => (index + 1) % installCommands.length);
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  async function copyInstallCommand() {
+    try {
+      await navigator.clipboard.writeText(installCommand);
+      setInstallCopied(true);
+      window.setTimeout(() => setInstallCopied(false), 1600);
+    } catch {
+      setInstallCopied(false);
+    }
+  }
 
   return (
     <header className={styles.hero}>
@@ -87,7 +114,68 @@ function HomepageHeader() {
 
             <div className={styles.installCommand} aria-label="Install lighty">
               <span>$</span>
-              <code>pnpm add lighty</code>
+              <code
+                aria-live="polite"
+                className={styles.installCommandText}
+                key={installCommand}
+              >
+                {installCommand}
+              </code>
+              <button
+                aria-label={
+                  installCopied
+                    ? 'Copied install command'
+                    : 'Copy install command'
+                }
+                className={`${styles.copyInstallButton} ${
+                  installCopied ? styles.copyInstallButtonCopied : ''
+                }`}
+                onClick={copyInstallCommand}
+                title={installCopied ? 'Copied' : 'Copy'}
+                type="button"
+              >
+                {installCopied ? (
+                  <svg
+                    aria-hidden="true"
+                    className={styles.copyInstallIcon}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="m5 12 4 4L19 6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2.25"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    aria-hidden="true"
+                    className={styles.copyInstallIcon}
+                    viewBox="0 0 24 24"
+                  >
+                    <rect
+                      fill="none"
+                      height="11"
+                      rx="2"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      width="11"
+                      x="8"
+                      y="8"
+                    />
+                    <path
+                      d="M5 15V7a2 2 0 0 1 2-2h8"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                )}
+              </button>
             </div>
 
             <div className={styles.buttons}>
