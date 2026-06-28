@@ -5,9 +5,9 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'lighty',
-  tagline: 'Typed HTTP request helpers for Node.js integration tests',
-  favicon: 'img/favicon.ico',
+  title: "lighty",
+  tagline: "Typed HTTP request helpers for Node.js integration tests",
+  favicon: "img/favicon.ico",
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -15,92 +15,94 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://lighty.local',
+  url: "https://lighty.local",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: "/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'aleksandar',
-  projectName: 'lighty',
+  organizationName: "aleksandar",
+  projectName: "lighty",
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: "throw",
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: "en",
+    locales: ["en"],
   },
 
   presets: [
     [
-      'classic',
+      "classic",
       {
         docs: {
-          sidebarPath: './sidebars.ts',
+          sidebarPath: "./sidebars.ts",
         },
         blog: false,
         theme: {
-          customCss: './src/css/custom.css',
+          customCss: "./src/css/custom.css",
         },
       } satisfies Preset.Options,
     ],
   ],
 
   themeConfig: {
-    image: 'img/logo.svg',
+    image: "img/logo.svg",
     colorMode: {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'lighty',
+      title: "lighty",
       logo: {
-        alt: 'lighty logo',
-        src: 'img/logo.svg',
+        alt: "lighty logo",
+        src: "img/logo.svg",
       },
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'lightySidebar',
-          position: 'left',
-          label: 'Docs',
+          type: "docSidebar",
+          sidebarId: "lightySidebar",
+          position: "left",
+          label: "Docs",
         },
         {
-          href: 'https://github.com/aleksandar/lighty',
-          label: 'GitHub',
-          position: 'right',
+          href: "https://github.com/azeljkovic/lighty",
+          label: "GitHub",
+          position: "right",
+          className: "header-github-link",
+          "aria-label": "GitHub repository",
         },
       ],
     },
     footer: {
-      style: 'dark',
+      style: "dark",
       links: [
         {
-          title: 'Docs',
+          title: "Docs",
           items: [
             {
-              label: 'Introduction',
-              to: '/docs/intro',
+              label: "Introduction",
+              to: "/docs/intro",
             },
             {
-              label: 'Type Reference',
-              to: '/docs/type-reference',
+              label: "Type Reference",
+              to: "/docs/type-reference",
             },
           ],
         },
         {
-          title: 'More',
+          title: "More",
           items: [
             {
-              label: 'npm',
-              href: 'https://www.npmjs.com/package/lighty',
+              label: "npm",
+              href: "https://www.npmjs.com/package/lighty",
             },
             {
-              label: 'GitHub',
-              href: 'https://github.com/aleksandar/lighty',
+              label: "GitHub",
+              href: "https://github.com/azeljkovic/lighty",
             },
           ],
         },

@@ -94,16 +94,25 @@ function HomepageHeader() {
               <Link className={styles.primaryButton} to="/docs/getting-started">
                 Get Started
               </Link>
-              <Link className={styles.secondaryButton} to="/docs/request-api/type-reference">
+              <Link
+                className={styles.secondaryButton}
+                to="/docs/request-api/type-reference"
+              >
                 Type Reference
               </Link>
-              <Link className={styles.ghostButton} to="https://github.com/aleksandar/lighty">
+              <Link
+                className={styles.ghostButton}
+                to="https://github.com/azeljkovic/lighty"
+              >
                 GitHub
               </Link>
             </div>
           </div>
 
-          <div className={styles.heroPreview} aria-label="lighty request example">
+          <div
+            className={styles.heroPreview}
+            aria-label="lighty request example"
+          >
             <div className={styles.previewHeader}>
               <img src={logoUrl} alt="" className={styles.previewLogo} />
               <div>
