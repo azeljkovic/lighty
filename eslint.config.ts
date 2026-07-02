@@ -8,6 +8,9 @@ import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 export default defineConfig([
   {
+    ignores: ["docs/.docusaurus/", "docs/build/"],
+  },
+  {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
     plugins: { js },
     extends: ["js/recommended"],
@@ -18,6 +21,12 @@ export default defineConfig([
     files: ["**/*.json"],
     plugins: { json },
     language: "json/json",
+    extends: ["json/recommended"],
+  },
+  {
+    files: ["**/tsconfig.json"],
+    plugins: { json },
+    language: "json/jsonc",
     extends: ["json/recommended"],
   },
   {

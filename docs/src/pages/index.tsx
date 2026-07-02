@@ -56,9 +56,9 @@ const features = [
 ];
 
 const installCommands = [
-  'pnpm add lighty',
-  'npm install lighty',
-  'yarn add lighty',
+  "pnpm add @azeljkovic/lighty",
+  "npm install @azeljkovic/lighty",
+  "yarn add @azeljkovic/lighty",
 ];
 
 function HomepageHeader() {
