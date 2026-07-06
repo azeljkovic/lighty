@@ -1,9 +1,33 @@
 {
-  "name": "lighty",
-  "version": "1.0.0",
+  "name": "@azeljkovic/lighty",
+  "version": "0.0.1",
   "type": "module",
   "license": "MIT",
-  "description": "",
+  "description": "Lightweight HTTP client and testing library.",
+  "repository": "github:azeljkovic/lighty",
+  "homepage": "https://lighty.dev",
+  "bugs": {
+    "url": "https://github.com/azeljkovic/lighty/issues",
+    "email": "dev@zeljkovic.com"
+  },
+  "keywords": [
+    "http",
+    "testing",
+    "api-testing",
+    "integration-testing",
+    "fetch",
+    "node",
+    "node-test",
+    "typescript",
+    "esm",
+    "request",
+    "assertions",
+    "test-utils",
+    "http-client",
+    "rest",
+    "json"
+  ],
+  "author": "Aleksandar Zeljkovic <dev@zeljkovic.com> (https://www.zeljkovic.com)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

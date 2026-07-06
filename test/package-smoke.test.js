@@ -31,7 +31,7 @@ describe("package smoke test", () => {
           { env },
         );
         const [packedPackage] = parsePackOutput(packOutput);
-        assert.equal(packedPackage.name, "lighty");
+        assert.equal(packedPackage.name, "@azeljkovic/lighty");
         assert.ok(
           packedPackage.files.some((file) => file.path === "dist/index.js"),
           "packed package should include dist/index.js",
@@ -63,7 +63,7 @@ describe("package smoke test", () => {
           smokeTestPath,
           [
             'import assert from "node:assert/strict";',
-            'import {',
+            "import {",
             "  bodyEquals,",
             "  createClient,",
             "  headerIs,",
@@ -71,7 +71,7 @@ describe("package smoke test", () => {
             "  lightyRequest,",
             "  customRequest,",
             "  statusCodeIs,",
-            '} from "lighty";',
+            '} from "@azeljkovic/lighty";',
             "",
             'assert.equal(typeof bodyEquals, "function");',
             'assert.equal(typeof createClient, "function");',
