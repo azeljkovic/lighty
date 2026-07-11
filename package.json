@@ -28,6 +28,7 @@
     "json"
   ],
   "author": "Aleksandar Zeljkovic <dev@zeljkovic.com> (https://www.zeljkovic.com)",
+  "packageManager": "pnpm@11.10.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
