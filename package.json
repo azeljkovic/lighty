@@ -4,7 +4,10 @@
   "type": "module",
   "license": "MIT",
   "description": "Lightweight HTTP client and testing library.",
-  "repository": "github:azeljkovic/lighty",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azeljkovic/lighty.git"
+  },
   "homepage": "https://lighty.dev",
   "bugs": {
     "url": "https://github.com/azeljkovic/lighty/issues",
