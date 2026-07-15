@@ -25,7 +25,7 @@ interface ClientConfig {
 Client options are defaults. Per-request options override them.
 
 ```ts
-import {createClient} from "lighty";
+import {createClient} from "@azeljkovic/lighty";
 
 const client = createClient({
   baseUrl: "https://api.example.test/v1",
@@ -167,4 +167,3 @@ const result = await client.getRequest("/missing", {
 ```
 
 The request uses the shorter timeout and returns a `RequestResult` for a non-OK response.
-

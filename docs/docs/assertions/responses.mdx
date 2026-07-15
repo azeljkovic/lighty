@@ -1,0 +1,80 @@
+---
+sidebar_position: 2
+title: Response Assertions
+description: Assert HTTP status codes and redirects from a lighty request result or native Response.
+---
+
+# Response assertions
+
+Response assertions accept a `RequestResult` or native `Response`. They inspect
+the underlying response, so status, redirects, and headers behave the same for
+both values.
+
+## Status codes
+
+Use an exact status helper when the endpoint has one expected outcome:
+
+```ts
+lightyAssert.statusCodeIs(result, 201);
+lightyAssert.responseIsCreated(result);
+```
+
+These helpers are available:
+
+| Helper | Passes when |
+| --- | --- |
+| `responseIsOk` | Status is 200–299. |
+| `responseIsSuccessful` | Status is 200–299. |
+| `responseIsCreated` | Status is 201. |
+| `responseIsAccepted` | Status is 202. |
+| `responseIsNoContent` | Status is 204. |
+| `responseIsBadRequest` | Status is 400. |
+| `responseIsUnauthorized` | Status is 401. |
+| `responseIsForbidden` | Status is 403. |
+| `responseIsNotFound` | Status is 404. |
+| `responseIsConflict` | Status is 409. |
+| `responseIsUnprocessableEntity` | Status is 422. |
+| `responseIsTooManyRequests` | Status is 429. |
+
+For a permitted range or set of alternatives, use the generic helpers:
+
+```ts
+lightyAssert.statusCodeIsOneOf(result, [200, 202, 204]);
+lightyAssert.statusCodeIsInRange(result, 200, 299);
+
+lightyAssert.statusCodeIs2xx(result);
+lightyAssert.statusCodeIs3xx(result);
+lightyAssert.statusCodeIs4xx(result);
+lightyAssert.statusCodeIs5xx(result);
+```
+
+`responseIsClientError` is a shorthand for the 400–499 range, and
+`responseIsServerError` is a shorthand for the 500–599 range.
+
+## Redirects
+
+`responseIsRedirect` checks for any 300–399 status. For a response received with
+`redirect: "manual"`, use `responseRedirectsTo` to check both the status and the
+`Location` header:
+
+```ts
+const result = await client.getRequest("/account", {
+  redirect: "manual",
+  throwOnHttpError: false,
+});
+
+lightyAssert.responseRedirectsTo(result, "/login");
+```
+
+With the default `redirect: "follow"`, `responseWasRedirectedTo` checks that
+fetch followed a redirect and that the final response URL has the expected path:
+
+```ts
+const result = await client.getRequest("/account");
+
+lightyAssert.responseWasRedirectedTo(result, "/login");
+```
+
+Both redirect helpers compare the URL pathname. Query strings and origins are not
+part of the comparison.
+

@@ -247,7 +247,7 @@ function CodeSection() {
           <div className={styles.codePanel}>
             <div className={styles.panelLabel}>Client defaults</div>
             <pre>
-              <code>{`import {createClient} from "lighty";
+              <code>{`import {createClient} from "@azeljkovic/lighty";
 
 const client = createClient({
   baseUrl: "https://api.example.test/v1",
@@ -287,10 +287,10 @@ function CommunitySection() {
   return (
     <section className={styles.cta}>
       <div className="container">
-        <Heading as="h2">Start with the request API</Heading>
+        <Heading as="h2">Start building clearer tests</Heading>
         <p>
-          Read the lifecycle, then jump into typed clients, params, response parsing, errors,
-          and logging.
+          Learn the request lifecycle, then move from typed clients and response parsing to
+          focused assertions for the behavior your test cares about.
         </p>
         <div className={styles.buttons}>
           <Link className={styles.primaryButton} to="/docs/intro">
@@ -298,6 +298,9 @@ function CommunitySection() {
           </Link>
           <Link className={styles.secondaryButton} to="/docs/request-api/configuration">
             Request Configuration
+          </Link>
+          <Link className={styles.secondaryButton} to="/docs/assertions/overview">
+            Assertions
           </Link>
         </div>
       </div>

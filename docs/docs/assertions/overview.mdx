@@ -1,0 +1,69 @@
+---
+sidebar_position: 1
+title: Assertions
+description: Assert on lighty request results, raw Responses, and parsed response bodies.
+---
+
+# Assertions
+
+`lighty` includes assertions for HTTP status, redirects, headers, response bodies,
+and common image formats. They use Node's assertion errors, so a failed assertion
+fails the current test with a message that includes the received value.
+
+Import assertions individually or use the `lightyAssert` namespace:
+
+```ts
+import {lightyAssert, statusCodeIs} from "@azeljkovic/lighty";
+```
+
+## Accepted values
+
+Response and header assertions accept either a `RequestResult` returned by a
+lighty request helper or a native `Response`:
+
+```ts
+const result = await client.getRequest("/health");
+
+lightyAssert.responseIsOk(result);
+statusCodeIs(result.response, 200);
+```
+
+Body assertions accept either a `RequestResult` or the parsed response body:
+
+```ts
+lightyAssert.bodyHasProperty(result, "ready", true);
+lightyAssert.bodyHasProperty(result.data, "ready", true);
+```
+
+Image assertions require the complete `RequestResult`, because they validate both
+the parsed bytes and the response `content-type` header.
+
+## A complete test
+
+```ts
+import {describe, it} from "node:test";
+import {createClient, lightyAssert} from "@azeljkovic/lighty";
+
+const client = createClient({
+  baseUrl: "https://api.example.test",
+  throwOnHttpError: false,
+});
+
+describe("GET /users/:id", () => {
+  it("returns a user", async () => {
+    const result = await client.getRequest("/users/ada");
+
+    lightyAssert.statusCodeIs(result, 200);
+    lightyAssert.headerIncludes(result, "content-type", "application/json");
+    lightyAssert.bodyContains(result, {
+      id: "ada",
+      active: true,
+    });
+  });
+});
+```
+
+When the request itself should throw for a non-2xx response, use
+`HttpRequestError` as described in [Errors and Logging](../request-api/errors-and-logging).
+Set `throwOnHttpError: false` when the test needs to assert a non-OK result.
+

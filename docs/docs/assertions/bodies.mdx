@@ -1,0 +1,99 @@
+---
+sidebar_position: 4
+title: Body Assertions
+description: Assert structured JSON, text, arrays, empty responses, lengths, and image response bodies.
+---
+
+# Body assertions
+
+Body assertions accept either a `RequestResult<T>` or the parsed body `T`. They
+work with the parser selected by the request, so set `responseType` when the
+endpoint's `content-type` does not reflect its payload.
+
+```ts
+const result = await client.getRequest<{id: string; profile: {active: boolean}}>(
+  "/users/ada",
+);
+
+lightyAssert.bodyHasProperty(result, "id", "ada");
+lightyAssert.bodyContains(result.data, {profile: {active: true}});
+```
+
+## JSON objects and paths
+
+| Helper | Behavior |
+| --- | --- |
+| `bodyEquals(body, expected)` | Performs a deep strict equality check. |
+| `bodyContains(body, partial)` | Matches the supplied object or array shape recursively. |
+| `bodyHasProperty(body, name, value?)` | Checks that an object owns a property; optionally checks its value. |
+| `bodyIncludesProperties(body, properties)` | Checks several own properties and their values. |
+| `bodyPathEquals(body, path, value)` | Checks a value at a nested property path. |
+| `bodyMatches(body, predicate, message?)` | Checks a custom body condition. |
+
+`bodyContains` performs a deep partial match. For arrays, the expected values must
+appear at the corresponding starting indexes; it is not an unordered membership
+check. Use `bodyArrayContains` for membership.
+
+`bodyPathEquals` accepts dot notation, bracket notation, or path segments:
+
+```ts
+lightyAssert.bodyPathEquals(result, "profile.email", "ada@example.test");
+lightyAssert.bodyPathEquals(result, "$.roles[0].name", "admin");
+lightyAssert.bodyPathEquals(result, ["profile", "settings", "theme"], "dark");
+```
+
+## Text, arrays, and lengths
+
+```ts
+lightyAssert.bodyTextContains(result, "welcome");
+lightyAssert.bodyTextMatches("ok", "ok");
+
+lightyAssert.bodyIsArray(result);
+lightyAssert.bodyArrayLengthIs(result, 3);
+lightyAssert.bodyArrayContains(result, {id: "ada"});
+lightyAssert.bodyArrayContainsItemMatching(result, (user) => user.active);
+lightyAssert.bodyArrayIsNotEmpty(result);
+```
+
+The remaining helpers cover common collection and empty-payload checks:
+
+| Helper | Behavior |
+| --- | --- |
+| `bodyArrayIsEmpty(body)` | Checks that an array has no items. |
+| `bodyHasLength(body, length)` | Checks a string, array, or value with a numeric `length`. |
+| `bodyLengthIsGreaterThan(body, length)` | Checks that `length` is greater than the value. |
+| `bodyLengthIsAtLeast(body, length)` | Checks that `length` is at least the value. |
+| `bodyObjectIsEmpty(body)` | Checks that a non-array object has no own keys. |
+| `bodyIsNoContent(body)` | Checks for `null`, `undefined`, or an empty string. |
+
+`bodyIsNoContent` only checks the payload. Pair it with `responseIsNoContent` when
+the endpoint must return HTTP 204.
+
+## Image responses
+
+Image helpers require the complete request result and validate the MIME type plus
+the payload signature. Request binary images as an `ArrayBuffer`:
+
+```ts
+const png = await client.getRequest<ArrayBuffer>("/avatars/ada.png", {
+  responseType: "arrayBuffer",
+});
+
+lightyAssert.bodyIsPng(png);
+```
+
+Available image assertions are `bodyIsPng`, `bodyIsJpeg`, `bodyIsWebp`, and
+`bodyIsSvg`. SVG must be requested as text (the default parser handles an
+`image/svg+xml` response as text):
+
+```ts
+const icon = await client.getRequest<string>("/icon.svg", {
+  responseType: "text",
+});
+
+lightyAssert.bodyIsSvg(icon);
+```
+
+Custom predicates in `bodyMatches` and `bodyArrayContainsItemMatching` can be
+synchronous only. If a predicate throws, lighty attaches the original error as
+the assertion failure's `cause`.
