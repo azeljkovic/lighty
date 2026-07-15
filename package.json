@@ -4,7 +4,10 @@
   "type": "module",
   "license": "MIT",
   "description": "Lightweight HTTP client and testing library.",
-  "repository": "github:azeljkovic/lighty",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azeljkovic/lighty.git"
+  },
   "homepage": "https://lighty.dev",
   "bugs": {
     "url": "https://github.com/azeljkovic/lighty/issues",
@@ -28,6 +31,7 @@
     "json"
   ],
   "author": "Aleksandar Zeljkovic <dev@zeljkovic.com> (https://www.zeljkovic.com)",
+  "packageManager": "pnpm@11.10.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
