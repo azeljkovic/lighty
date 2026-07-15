@@ -91,9 +91,9 @@ function HomepageHeader() {
       <div className="container">
         <div className={styles.heroGrid}>
           <div className={styles.heroCopy}>
-            <p className={styles.kicker}>Node.js HTTP testing</p>
+            <p className={styles.kicker}>0-dependency Node.js library</p>
             <Heading as="h1" className={styles.title}>
-              Typed requests for integration tests
+              ⚡️lighty
             </Heading>
             <p className={styles.subtitle}>{siteConfig.tagline}</p>
 
@@ -109,14 +109,14 @@ function HomepageHeader() {
               <button
                 aria-label={
                   installCopied
-                    ? 'Copied install command'
-                    : 'Copy install command'
+                    ? "Copied install command"
+                    : "Copy install command"
                 }
                 className={`${styles.copyInstallButton} ${
-                  installCopied ? styles.copyInstallButtonCopied : ''
+                  installCopied ? styles.copyInstallButtonCopied : ""
                 }`}
                 onClick={copyInstallCommand}
-                title={installCopied ? 'Copied' : 'Copy'}
+                title={installCopied ? "Copied" : "Copy"}
                 type="button"
               >
                 {installCopied ? (
