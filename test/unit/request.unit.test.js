@@ -31,7 +31,6 @@ describe("requests", () => {
         ["x-client", "client"],
       ]),
       timeoutMs: 1000,
-      throwOnHttpError: false,
       logger: false,
     });
 
@@ -121,6 +120,7 @@ describe("requests", () => {
         url: "https://example.test/users",
         params: { source: "unit" },
         body: { name: "Ada" },
+        throwOnHttpError: true,
         logger: false,
       }),
       (error) => {
@@ -142,7 +142,7 @@ describe("requests", () => {
     );
   });
 
-  it("returns parsed response details for HTTP errors when throwOnHttpError is false", async (t) => {
+  it("returns parsed response details for HTTP errors by default", async (t) => {
     t.mock.method(globalThis, "fetch", async () =>
       jsonResponse({ code: "invalid_request" }, { status: 400 }),
     );
@@ -150,7 +150,6 @@ describe("requests", () => {
     const result = await customRequest({
       method: "GET",
       url: "https://example.test/users",
-      throwOnHttpError: false,
       logger: false,
     });
 
@@ -506,7 +505,7 @@ describe("requests", () => {
     assert.deepEqual(events, ["requestStart", "requestEnd"]);
   });
 
-  it("uses basic console logging by default when no logger is provided", async (t) => {
+  it("does not log when no logger is provided", async (t) => {
     const logs = [];
 
     t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
@@ -517,15 +516,7 @@ describe("requests", () => {
       url: "https://example.test/users",
     });
 
-    assert.equal(logs.length, 2);
-    assert.match(
-      logs[0][0],
-      /^\[⚡️lighty\] GET https:\/\/example\.test\/users started$/,
-    );
-    assert.match(
-      logs[1][0],
-      /^\[⚡️lighty\] GET https:\/\/example\.test\/users completed in \d+ms \(200 ok\)$/,
-    );
+    assert.deepEqual(logs, []);
   });
 
   it("supports logging level strings with the built-in logger", async (t) => {

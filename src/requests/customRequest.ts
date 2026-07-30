@@ -69,7 +69,7 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
       body: getLogResponseBody(responseBody, config.responseType),
     });
 
-    if (!response.ok && config.throwOnHttpError !== false) {
+    if (!response.ok && config.throwOnHttpError === true) {
       throw new HttpRequestError<TResponse>({
         status: response.status,
         statusText: response.statusText,

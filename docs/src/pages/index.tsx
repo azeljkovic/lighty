@@ -197,7 +197,6 @@ function HomepageHeader() {
               <code>{`const client = createClient({
   baseUrl: "https://api.example.test",
   timeoutMs: 5_000,
-  throwOnHttpError: false,
 });
 
 const result = await client.postRequest<User>("/users", {
