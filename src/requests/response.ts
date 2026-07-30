@@ -42,7 +42,7 @@ export async function parseResponseBody<TResponse>(
     return undefined as TResponse;
   }
 
-  if (responseType === "json" || contentType.includes("application/json")) {
+  if (responseType === "json" || isJsonContentType(contentType)) {
     try {
       return JSON.parse(text) as TResponse;
     } catch (error) {
@@ -58,6 +58,12 @@ export async function parseResponseBody<TResponse>(
   }
 
   return text as TResponse;
+}
+
+function isJsonContentType(contentType: string): boolean {
+  const mediaType = contentType.split(";", 1)[0].trim().toLowerCase();
+
+  return mediaType === "application/json" || mediaType.endsWith("+json");
 }
 
 export function getLogResponseBody<TResponse>(
