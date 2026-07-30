@@ -181,6 +181,29 @@ describe("requests", () => {
     );
   });
 
+  for (const contentType of [
+    "application/problem+json",
+    "application/vnd.api+json; charset=utf-8",
+    "text/example+json",
+  ]) {
+    it(`parses JSON for ${contentType} responses`, async (t) => {
+      t.mock.method(globalThis, "fetch", async () =>
+        textResponse(JSON.stringify({ type: contentType }), {
+          status: 200,
+          headers: { "content-type": contentType },
+        }),
+      );
+
+      const result = await customRequest({
+        method: "GET",
+        url: "https://example.test/json-suffix",
+        logger: false,
+      });
+
+      assert.deepEqual(result.data, { type: contentType });
+    });
+  }
+
   it("returns text when responseType is text", async (t) => {
     t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
 
