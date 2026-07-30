@@ -131,7 +131,7 @@ The complete request config accepted by `customRequest`.
 | `body` | No | Request body, serialized with `JSON.stringify`. |
 | `signal` | No | Abort signal passed to `fetch`. |
 | `timeoutMs` | No | Timeout in milliseconds. |
-| `throwOnHttpError` | No | Set `false` to return non-OK responses instead of throwing. |
+| `throwOnHttpError` | No | Defaults to returning non-OK responses. Set `true` to throw. |
 | `responseType` | No | Explicit response parser. |
 | `redirect` | No | Fetch redirect behavior. |
 | `logger` | No | Logger level, disabled flag, or custom logger. |

@@ -34,6 +34,7 @@ describe("HTTP errors", () => {
             url: `${baseUrl}/users/1`,
             params: { source: "unit" },
             body: { email: "" },
+            throwOnHttpError: true,
             logger: false,
           }),
           HttpRequestError,
@@ -65,6 +66,7 @@ describe("HTTP errors", () => {
           customRequest({
             method: "GET",
             url: `${baseUrl}/unavailable`,
+            throwOnHttpError: true,
             logger: false,
           }),
           HttpRequestError,
@@ -81,7 +83,7 @@ describe("HTTP errors", () => {
     );
   });
 
-  it("returns HTTP error responses when throwOnHttpError is false", async () => {
+  it("returns HTTP error responses by default", async () => {
     await withLocalHttpServer(
       async (_req, res) => {
         sendJson(res, 404, { code: "not_found" });
@@ -90,7 +92,6 @@ describe("HTTP errors", () => {
         const result = await customRequest({
           method: "GET",
           url: `${baseUrl}/missing`,
-          throwOnHttpError: false,
           logger: false,
         });
 

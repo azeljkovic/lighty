@@ -60,7 +60,6 @@ lightyAssert.statusCodeIs5xx(result);
 ```ts
 const result = await client.getRequest("/account", {
   redirect: "manual",
-  throwOnHttpError: false,
 });
 
 lightyAssert.responseRedirectsTo(result, "/login");
@@ -77,4 +76,3 @@ lightyAssert.responseWasRedirectedTo(result, "/login");
 
 Both redirect helpers compare the URL pathname. Query strings and origins are not
 part of the comparison.
-

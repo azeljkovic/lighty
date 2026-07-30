@@ -107,7 +107,7 @@ await client.getRequest("/users", {
 | `body` | `TBody` | `RequestConfig` and `MethodConfig` | JSON-stringified and sent as the request body. |
 | `signal` | `AbortSignal` | All configs | Passed to `fetch`; combined with `timeoutMs` when both are provided. |
 | `timeoutMs` | `number` | All configs | Creates an `AbortSignal.timeout(timeoutMs)`. |
-| `throwOnHttpError` | `boolean` | All configs | Defaults to throwing on non-OK HTTP responses. Set `false` to receive them as results. |
+| `throwOnHttpError` | `boolean` | All configs | Defaults to returning non-OK HTTP responses as results. Set `true` to throw. |
 | `responseType` | `RequestResponseType` | All configs | Forces body parsing instead of relying on `content-type`. |
 | `redirect` | `RequestRedirectMode` | All configs | Passed through to `fetch` as `redirect`. |
 | `logger` | `RequestLoggerConfig` | All configs | Controls built-in or custom request logging. |

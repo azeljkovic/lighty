@@ -197,13 +197,13 @@ function isSensitiveHeaderKey(key: string) {
 function getActiveLogger(
   logger: RequestLoggerConfig | undefined,
 ): RequestLogger | undefined {
-  if (logger === false || logger === "off") {
+  if (logger === undefined || logger === false || logger === "off") {
     return undefined;
   }
 
-  if (logger === undefined || logger === "basic" || logger === "verbose") {
+  if (logger === "basic" || logger === "verbose") {
     return {
-      level: logger ?? "basic",
+      level: logger,
       ...DEFAULT_LOGGER_HOOKS,
     };
   }

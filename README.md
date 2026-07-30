@@ -26,7 +26,6 @@ import { createClient, lightyAssert } from "@azeljkovic/lighty";
 const client = createClient({
   baseUrl: "https://api.example.test",
   timeoutMs: 5_000,
-  throwOnHttpError: false,
 });
 
 describe("users API", () => {
@@ -102,7 +101,6 @@ const client = createClient({
     Authorization: "Bearer test-token",
   },
   timeoutMs: 5_000,
-  throwOnHttpError: false,
   responseType: "json",
   redirect: "follow",
   logger: "basic",
@@ -252,7 +250,18 @@ Supported response types are:
 
 ### HTTP Errors
 
-By default, non-2xx responses throw `HttpRequestError` after the response body has been parsed:
+By default, non-2xx responses are returned as normal `RequestResult` values, so tests can assert their status and body:
+
+```js
+const result = await client.getRequest("/missing");
+
+lightyAssert.statusCodeIs(result, 404);
+lightyAssert.bodyContains(result, {
+  code: "not_found",
+});
+```
+
+Set `throwOnHttpError: true` when non-2xx responses should throw `HttpRequestError` after the response body has been parsed:
 
 ```js
 import { HttpRequestError, patchRequest } from "@azeljkovic/lighty";
@@ -262,6 +271,7 @@ try {
     body: {
       email: "",
     },
+    throwOnHttpError: true,
   });
 } catch (error) {
   if (error instanceof HttpRequestError) {
@@ -272,19 +282,6 @@ try {
     console.log(error.url);
   }
 }
-```
-
-Set `throwOnHttpError: false` to receive non-2xx responses as normal results:
-
-```js
-const result = await client.getRequest("/missing", {
-  throwOnHttpError: false,
-});
-
-lightyAssert.statusCodeIs(result, 404);
-lightyAssert.bodyContains(result, {
-  code: "not_found",
-});
 ```
 
 Invalid JSON responses throw `InvalidJsonResponseError` with status, headers, raw body text, URL, and the original parsing error as `cause`.
@@ -437,11 +434,11 @@ lightyAssert.bodyIsSvg(svgResult);
 
 ## Logging
 
-Requests log through the built-in console logger by default. Set `logger: false` or `logger: "off"` to disable logging.
+Requests do not log by default. Set `logger` to `"basic"` or `"verbose"` to enable the built-in console logger.
 
 ```js
 await client.getRequest("/users", {
-  logger: "off",
+  logger: "basic",
 });
 ```
 
@@ -482,7 +479,6 @@ import { createClient, lightyAssert } from "@azeljkovic/lighty";
 
 const client = createClient({
   baseUrl: "https://api.example.test",
-  throwOnHttpError: false,
 });
 
 const params = {
