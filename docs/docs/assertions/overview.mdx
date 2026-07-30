@@ -46,7 +46,6 @@ import {createClient, lightyAssert} from "@azeljkovic/lighty";
 
 const client = createClient({
   baseUrl: "https://api.example.test",
-  throwOnHttpError: false,
 });
 
 describe("GET /users/:id", () => {
@@ -63,7 +62,6 @@ describe("GET /users/:id", () => {
 });
 ```
 
-When the request itself should throw for a non-2xx response, use
-`HttpRequestError` as described in [Errors and Logging](../request-api/errors-and-logging).
-Set `throwOnHttpError: false` when the test needs to assert a non-OK result.
-
+When the request itself should throw for a non-2xx response, set
+`throwOnHttpError: true` and use `HttpRequestError` as described in
+[Errors and Logging](../request-api/errors-and-logging).

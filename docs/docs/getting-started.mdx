@@ -28,7 +28,6 @@ type User = {
 const client = createClient({
   baseUrl: "https://api.example.test",
   timeoutMs: 5_000,
-  throwOnHttpError: false,
 });
 
 const result = await client.getRequest<User>("/users/ada");
@@ -49,7 +48,6 @@ import {createClient, lightyAssert} from "@azeljkovic/lighty";
 const client = createClient({
   baseUrl: "https://api.example.test",
   timeoutMs: 5_000,
-  throwOnHttpError: false,
 });
 
 describe("users API", () => {

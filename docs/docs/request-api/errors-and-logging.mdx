@@ -13,7 +13,19 @@ The request types expose two important behavior switches:
 
 ## HTTP errors
 
-By default, a response with `ok === false` throws `HttpRequestError` after its body has been parsed.
+By default, a response with `ok === false` is returned as a `RequestResult`, so tests can assert its status and body.
+
+```ts
+const result = await client.getRequest("/missing");
+
+if (result.status === 404) {
+  console.log(result.data);
+}
+```
+
+## Throwing non-OK responses
+
+Set `throwOnHttpError: true` to throw `HttpRequestError` after the response body has been parsed:
 
 ```ts
 import {HttpRequestError, patchRequest} from "@azeljkovic/lighty";
@@ -23,6 +35,7 @@ try {
     body: {
       email: "",
     },
+    throwOnHttpError: true,
   });
 } catch (error) {
   if (error instanceof HttpRequestError) {
@@ -41,21 +54,9 @@ The error body uses the same parser selected by `responseType` or automatic pars
 `url`. The exported `HttpRequestErrorOptions<TBody>` describes those constructor
 options when you need to type an error wrapper or helper.
 
-## Returning non-OK responses
-
-Set `throwOnHttpError: false` to receive non-OK responses as `RequestResult` values.
-
-```ts
-const result = await client.getRequest("/missing", {
-  throwOnHttpError: false,
-});
-
-if (result.status === 404) {
-  console.log(result.data);
-}
-```
-
-This setting can be defined on `ClientConfig` and overridden per request.
+This setting can be defined on `ClientConfig` and overridden per request. Set it
+back to `false` on a request when a client normally throws but that request
+needs to assert a non-OK response.
 
 ## Invalid JSON
 
@@ -112,16 +113,16 @@ Built-in levels:
 
 | Level | Behavior |
 | --- | --- |
-| `basic` | Logs request start and request completion. This is the default when `logger` is omitted. |
+| `basic` | Logs request start and request completion. |
 | `verbose` | Logs request start, parsed response details, and request completion. |
-| `off` | Disables logging. |
+| `off` | Disables logging. This is the default when `logger` is omitted. |
 | `false` | Also disables logging. |
 
-Disable logging for a request:
+Enable basic logging for a request:
 
 ```ts
 await client.getRequest("/users", {
-  logger: "off",
+  logger: "basic",
 });
 ```
 
