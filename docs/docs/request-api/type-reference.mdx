@@ -1,12 +1,12 @@
 ---
 sidebar_position: 6
 title: Type Reference
-description: Complete reference for the request types exported from src/requests/types.ts.
+description: Complete reference for the public types used by lighty request helpers and clients.
 ---
 
 # Type reference
 
-This page documents the public request types in `src/requests/types.ts`.
+This page documents the public types used by request helpers and clients.
 
 ## RequestParamValue
 
@@ -124,7 +124,7 @@ The complete request config accepted by `customRequest`.
 
 | Property | Required | Description |
 | --- | --- | --- |
-| `method` | Yes | HTTP method. The `HttpMethod` type is exported from `src/types.ts`. |
+| `method` | Yes | HTTP method. `HttpMethod` restricts it to the methods supported by lighty. |
 | `url` | Yes | Absolute request URL for direct requests. With a client, relative URLs can be resolved through `baseUrl`. |
 | `headers` | No | Any `HeadersInit` accepted by `fetch`: plain object, tuple array, or `Headers`. |
 | `params` | No | Query parameters appended to `url`. |
@@ -155,11 +155,14 @@ interface MethodConfig<TBody = unknown> {
 Used by method-specific helpers where the helper supplies the method and receives URL as a positional argument.
 
 ```ts
-await postRequest<{id: string}, {name: string}>("/users", {
-  body: {
-    name: "Ada",
+await postRequest<{id: string}, {name: string}>(
+  "https://api.example.test/users",
+  {
+    body: {
+      name: "Ada",
+    },
   },
-});
+);
 ```
 
 ## BodylessMethodConfig
@@ -171,7 +174,7 @@ type BodylessMethodConfig = Omit<MethodConfig, "body">;
 Used by bodyless method helpers.
 
 ```ts
-await getRequest("/users", {
+await getRequest("https://api.example.test/users", {
   params: {
     active: true,
   },
@@ -236,15 +239,41 @@ interface Client {
 }
 ```
 
-## Related imported types
+## Related types
 
 `types.ts` imports these public platform and library types:
 
 | Type | Source | Role |
 | --- | --- | --- |
-| `HttpMethod` | `src/types.ts` | Restricts request methods to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, and `HEAD`. |
-| `RequestLoggerConfig` | `src/utils/logger.ts` | Configures built-in or custom logging. |
+| `HttpMethod` | lighty | Restricts request methods to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, and `HEAD`. |
+| `RequestLoggerConfig` | lighty | Configures built-in or custom logging. |
 | `HeadersInit` | Fetch/Web API | Accepts the same header inputs as native `fetch`. |
 | `AbortSignal` | Fetch/Web API | Allows caller-driven cancellation and timeout composition. |
 | `Response` | Fetch/Web API | Exposes the raw fetch response on `RequestResult.response`. |
 
+## Error option types
+
+These types mirror the public error fields and are useful when typing wrappers
+around request errors:
+
+```ts
+interface HttpRequestErrorOptions<TBody = unknown> {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: TBody;
+  url: string;
+}
+
+interface InvalidJsonResponseErrorOptions {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: string;
+  url: string;
+  cause: unknown;
+}
+```
+
+`Body` and `BodyParseError` are also exported as compatibility utility types.
+`Body` is `unknown`; `BodyParseError` is `string | undefined`.

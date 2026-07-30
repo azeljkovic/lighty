@@ -9,7 +9,7 @@ description: Install lighty, create a client, send a request, and assert on the 
 Install the package:
 
 ```sh
-pnpm add lighty
+pnpm add @azeljkovic/lighty
 ```
 
 Use the equivalent command for npm, Yarn, or Bun if you do not use pnpm.
@@ -17,7 +17,7 @@ Use the equivalent command for npm, Yarn, or Bun if you do not use pnpm.
 ## First request
 
 ```ts
-import {createClient} from "lighty";
+import {createClient} from "@azeljkovic/lighty";
 
 type User = {
   id: string;
@@ -44,7 +44,7 @@ console.log(result.data.name);
 
 ```ts
 import {describe, it} from "node:test";
-import {createClient, lightyAssert} from "lighty";
+import {createClient, lightyAssert} from "@azeljkovic/lighty";
 
 const client = createClient({
   baseUrl: "https://api.example.test",
@@ -79,7 +79,7 @@ describe("users API", () => {
 Use direct helpers when you do not need a shared client:
 
 ```ts
-import {getRequest, postRequest, customRequest} from "lighty";
+import {getRequest, postRequest, customRequest} from "@azeljkovic/lighty";
 
 const users = await getRequest("https://api.example.test/users", {
   params: {
@@ -107,4 +107,3 @@ const patched = await customRequest({
 Use `createClient` when several requests share a base URL, authentication headers, timeout, logging, or response parsing policy.
 
 Use direct helpers for one-off requests, small tests, or calls where every option is request-specific.
-

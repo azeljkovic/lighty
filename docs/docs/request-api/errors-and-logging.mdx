@@ -16,7 +16,7 @@ The request types expose two important behavior switches:
 By default, a response with `ok === false` throws `HttpRequestError` after its body has been parsed.
 
 ```ts
-import {HttpRequestError, patchRequest} from "lighty";
+import {HttpRequestError, patchRequest} from "@azeljkovic/lighty";
 
 try {
   await patchRequest("https://api.example.test/users/1", {
@@ -36,6 +36,10 @@ try {
 ```
 
 The error body uses the same parser selected by `responseType` or automatic parsing.
+
+`HttpRequestError<TBody>` exposes `status`, `statusText`, `headers`, `body`, and
+`url`. The exported `HttpRequestErrorOptions<TBody>` describes those constructor
+options when you need to type an error wrapper or helper.
 
 ## Returning non-OK responses
 
@@ -71,6 +75,9 @@ The error includes:
 - `url`
 - `cause`, containing the original JSON parse error
 
+`InvalidJsonResponseErrorOptions` is also exported for code that needs to type
+the constructor options. It includes the same fields as the error plus `cause`.
+
 ## Redirects
 
 `redirect` is passed directly to `fetch`.
@@ -94,7 +101,7 @@ type RequestRedirectMode = "error" | "follow" | "manual";
 
 ## Logger configuration
 
-`logger` is typed as `RequestLoggerConfig` from `src/utils/logger.ts`:
+`logger` accepts a `RequestLoggerConfig`:
 
 ```ts
 type RequestLoggerLevel = "off" | "basic" | "verbose";
@@ -139,6 +146,29 @@ await client.postRequest("/users", {
 
 Logger hooks can be synchronous or asynchronous.
 
+## Logger hook entries
+
+The custom logger type and event entry types are exported for typed integrations:
+
+```ts
+import type {
+  RequestEndLogEntry,
+  RequestLogger,
+  RequestStartLogEntry,
+  ResponseLogEntry,
+} from "@azeljkovic/lighty";
+```
+
+| Hook | Entry type | Fields |
+| --- | --- | --- |
+| `requestStart` | `RequestStartLogEntry` | `method`, redacted `url`, redacted `headers`, and optional redacted `body`. |
+| `response` | `ResponseLogEntry` | Request fields plus `status`, `statusText`, `ok`, `redirected`, response `type`, redacted headers, and redacted body. |
+| `requestEnd` | `RequestEndLogEntry` | `method`, redacted `url`, `durationMs`, optional `status`, optional `ok`, and an optional error summary. |
+
+`RequestLogger` exposes the optional `level`, `requestStart`, `response`, and
+`requestEnd` hooks. A custom logger emits `response` only when its level is
+`"verbose"`; `requestStart` and `requestEnd` run unless the level is `"off"`.
+
 ## Redaction
 
 Before data reaches logger hooks, `lighty` redacts sensitive values from:
@@ -152,4 +182,3 @@ The redacted value is:
 ```text
 [REDACTED]
 ```
-

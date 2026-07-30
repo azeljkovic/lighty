@@ -6,7 +6,7 @@ description: Understand RequestConfig, MethodConfig, BodylessMethodConfig, Clien
 
 # Request configuration
 
-`src/requests/types.ts` defines three configuration shapes:
+The request API defines three configuration shapes:
 
 - `RequestConfig<TBody>` is the complete shape used by `customRequest`.
 - `MethodConfig<TBody>` is used by method helpers whose method and URL are passed separately.
@@ -33,7 +33,7 @@ interface RequestConfig<TBody = unknown> {
 Use `RequestConfig` with `customRequest`:
 
 ```ts
-import {customRequest} from "lighty";
+import {customRequest} from "@azeljkovic/lighty";
 
 const result = await customRequest({
   method: "PATCH",
@@ -149,4 +149,3 @@ await postRequest("https://api.example.test/events", {
 If `timeoutMs` is provided, `lighty` creates a timeout signal with `AbortSignal.timeout(timeoutMs)`.
 
 If both `signal` and `timeoutMs` are provided, `lighty` combines them with `AbortSignal.any`. The request aborts when either the caller's signal or the timeout signal aborts.
-

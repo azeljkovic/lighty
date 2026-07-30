@@ -8,13 +8,17 @@ description: Learn what lighty provides and how its typed request helpers fit in
 
 `lighty` is a small ESM HTTP testing library for Node.js. It wraps the built-in `fetch` API with typed request helpers and returns a normalized `RequestResult` that is easy to assert against in integration tests.
 
-The request API is built around the types in `src/requests/types.ts`:
+The request API exposes these core types:
 
 - `RequestConfig` describes a complete request, including method, URL, headers, query params, body, timeout, redirect policy, response parser, and logger.
 - `MethodConfig` describes the per-request options used by method-specific helpers such as `getRequest` and `postRequest`.
 - `ClientConfig` describes defaults shared by a reusable client created with `createClient`.
 - `RequestResult<TResponse>` describes the normalized result returned by every request helper.
 - `Client` describes the complete typed client interface.
+
+The assertion API accepts a complete `RequestResult`; body assertions also accept
+the parsed body itself. This lets a test make focused assertions without manually
+unwrapping a response.
 
 ## What lighty adds over raw fetch
 
@@ -40,10 +44,12 @@ import {
   HttpRequestError,
   InvalidJsonResponseError,
   lightyRequest,
-} from "lighty";
+  lightyAssert,
+} from "@azeljkovic/lighty";
 ```
 
 Request helpers are exported directly and through the `lightyRequest` namespace.
+Assertion helpers are exported directly and through the `lightyAssert` namespace.
 
 ## Requirements
 
@@ -63,4 +69,3 @@ Every request follows the same lifecycle:
 6. Parse the response body into `data`.
 7. Throw `HttpRequestError` for non-OK responses unless disabled.
 8. Return `RequestResult<TResponse>` with both normalized fields and the raw `Response`.
-

@@ -28,6 +28,16 @@ const sidebars: SidebarsConfig = {
         'request-api/type-reference',
       ],
     },
+    {
+      type: 'category',
+      label: 'Assertions',
+      items: [
+        'assertions/overview',
+        'assertions/responses',
+        'assertions/headers',
+        'assertions/bodies',
+      ],
+    },
   ],
 };
 

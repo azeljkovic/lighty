@@ -12,7 +12,7 @@ The library is designed for integration tests written with `node:test`, but the 
 ## Installation
 
 ```sh
-pnpm add lighty
+pnpm add @azeljkovic/lighty
 ```
 
 Use your package manager's equivalent command if you are not using pnpm.
@@ -21,7 +21,7 @@ Use your package manager's equivalent command if you are not using pnpm.
 
 ```js
 import { describe, it } from "node:test";
-import { createClient, lightyAssert } from "lighty";
+import { createClient, lightyAssert } from "@azeljkovic/lighty";
 
 const client = createClient({
   baseUrl: "https://api.example.test",
@@ -82,7 +82,7 @@ import {
   lightyAssert,
   HttpRequestError,
   InvalidJsonResponseError,
-} from "lighty";
+} from "@azeljkovic/lighty";
 ```
 
 Request helpers are exported directly and under `lightyRequest`. Assertion helpers are exported directly and under `lightyAssert`.
@@ -94,7 +94,7 @@ Request helpers are exported directly and under `lightyRequest`. Assertion helpe
 Creates a client with shared defaults:
 
 ```js
-import { createClient } from "lighty";
+import { createClient } from "@azeljkovic/lighty";
 
 const client = createClient({
   baseUrl: "https://api.example.test/v1",
@@ -133,7 +133,7 @@ Per-request options override client defaults. Headers are merged case-insensitiv
 Use direct helpers when you do not need shared defaults:
 
 ```js
-import { customRequest, getRequest, postRequest } from "lighty";
+import { customRequest, getRequest, postRequest } from "@azeljkovic/lighty";
 
 const getResult = await getRequest("https://api.example.test/users", {
   params: {
@@ -205,6 +205,7 @@ await client.getRequest("/anything", {
 ### Request Bodies
 
 When `body` is provided, lighty JSON-stringifies it and sets `Content-Type: application/json` unless you override that header.
+Every request also sends `Accept: application/json` unless you override it.
 
 ```js
 await client.postRequest("/anything", {
@@ -254,7 +255,7 @@ Supported response types are:
 By default, non-2xx responses throw `HttpRequestError` after the response body has been parsed:
 
 ```js
-import { HttpRequestError, patchRequest } from "lighty";
+import { HttpRequestError, patchRequest } from "@azeljkovic/lighty";
 
 try {
   await patchRequest("https://api.example.test/users/1", {
@@ -471,14 +472,18 @@ await client.postRequest("/users", {
 
 Logger entries redact sensitive header names, query parameters, and body keys containing words such as `authorization`, `cookie`, `password`, `secret`, `session`, `token`, and `apiKey`.
 
-## Example: Echoing Request Data
+## Example: Asserting Request Data
 
-The `examples/anything.test.js` file shows the common pattern for asserting echoed request params and JSON bodies:
+This is a common pattern for asserting a response that echoes request params and a JSON body:
 
 ```js
 import { describe, it } from "node:test";
-import { lightyAssert } from "lighty";
-import { client } from "./client.js";
+import { createClient, lightyAssert } from "@azeljkovic/lighty";
+
+const client = createClient({
+  baseUrl: "https://api.example.test",
+  throwOnHttpError: false,
+});
 
 const params = {
   color: "ultraviolet",
@@ -529,7 +534,7 @@ Run tests:
 pnpm test
 pnpm run test:unit
 pnpm run test:integration
-pnpm run test:examples
+pnpm run test:package
 ```
 
 Format and lint:
@@ -544,5 +549,4 @@ pnpm run lint
 - `src/requests`: request helpers, client factory, response parsing, and request errors
 - `src/assertions`: response, header, and body assertions
 - `src/utils/logger.ts`: built-in and custom request logging support
-- `examples`: runnable examples against the sample HTTP service
 - `test`: unit, integration, and package smoke tests

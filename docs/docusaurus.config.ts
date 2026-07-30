@@ -7,7 +7,7 @@ import localSearchPlugin from './plugins/localSearch';
 
 const config: Config = {
   title: "lighty",
-  tagline: "Typed HTTP request helpers for Node.js integration tests",
+  tagline: "Lightweight HTTP client and testing library.",
   favicon: "img/favicon.ico",
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -16,7 +16,7 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: "https://lighty.local",
+  url: "https://lighty.dev",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
@@ -91,8 +91,16 @@ const config: Config = {
               to: "/docs/intro",
             },
             {
-              label: "Type Reference",
-              to: "/docs/type-reference",
+              label: "Getting Started",
+              to: "/docs/getting-started",
+            },
+            {
+              label: "Request API",
+              to: "/docs/request-api/configuration",
+            },
+            {
+              label: "Assertions",
+              to: "/docs/assertions/overview",
             },
           ],
         },
@@ -101,7 +109,7 @@ const config: Config = {
           items: [
             {
               label: "npm",
-              href: "https://www.npmjs.com/package/lighty",
+              href: "https://www.npmjs.com/package/@azeljkovic/lighty",
             },
             {
               label: "GitHub",
