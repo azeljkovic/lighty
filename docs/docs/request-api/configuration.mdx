@@ -104,7 +104,7 @@ await client.getRequest("/users", {
 | `url` | `string` | `RequestConfig` and method helper argument | Absolute URL for direct helpers, or relative/absolute URL for clients. |
 | `headers` | `HeadersInit` | All configs | Merged with defaults. User headers override default headers case-insensitively. |
 | `params` | `RequestParams` | All configs | Appended to the URL query string. |
-| `body` | `TBody` | `RequestConfig` and `MethodConfig` | JSON-stringified and sent as the request body. |
+| `body` | `TBody` | `RequestConfig` and `MethodConfig` | JSON-stringified by default. Native `fetch` bodies, including text, `FormData`, binary data, and streams, are passed through. |
 | `signal` | `AbortSignal` | All configs | Passed to `fetch`; combined with `timeoutMs` when both are provided. |
 | `timeoutMs` | `number` | All configs | Creates an `AbortSignal.timeout(timeoutMs)`. |
 | `throwOnHttpError` | `boolean` | All configs | Defaults to returning non-OK HTTP responses as results. Set `true` to throw. |
