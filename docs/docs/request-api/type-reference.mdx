@@ -128,7 +128,7 @@ The complete request config accepted by `customRequest`.
 | `url` | Yes | Absolute request URL for direct requests. With a client, relative URLs can be resolved through `baseUrl`. |
 | `headers` | No | Any `HeadersInit` accepted by `fetch`: plain object, tuple array, or `Headers`. |
 | `params` | No | Query parameters appended to `url`. |
-| `body` | No | Request body, serialized with `JSON.stringify`. |
+| `body` | No | JSON-serialized unless it is a native `fetch` body (`string`, `FormData`, `Blob`, binary data, `URLSearchParams`, or `ReadableStream`), which is passed through. |
 | `signal` | No | Abort signal passed to `fetch`. |
 | `timeoutMs` | No | Timeout in milliseconds. |
 | `throwOnHttpError` | No | Defaults to returning non-OK responses. Set `true` to throw. |

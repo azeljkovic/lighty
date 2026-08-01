@@ -80,7 +80,7 @@ await client.postRequest("/users", {
 });
 ```
 
-`Content-Type: application/json` is added automatically when `body` is not `null` or `undefined`.
+`Content-Type: application/json` is added automatically for JSON-serialized bodies.
 
 ## Body-capable helpers
 
@@ -100,5 +100,35 @@ These helpers accept `BodylessMethodConfig`, which omits `body`:
 
 ## Non-JSON bodies
 
-The current request implementation serializes provided bodies as JSON. If you need multipart, raw text, binary uploads, or streaming request bodies, use native `fetch` directly or add a dedicated lighty helper that changes the body serialization behavior.
+Strings, `FormData`, `Blob`, `ArrayBuffer`, typed arrays, `URLSearchParams`, and `ReadableStream` values are passed directly to `fetch`. This supports raw text, multipart form uploads, binary payloads, and streaming uploads. All other non-null bodies are JSON-stringified.
 
+`Content-Type: application/json` is added only for JSON-serialized bodies. For native bodies, `fetch` can infer the appropriate value (including a multipart boundary for `FormData`); set `headers` yourself when the endpoint requires a specific content type.
+
+```ts
+await client.postRequest("/notes", {
+  body: "plain text",
+  headers: { "Content-Type": "text/plain" },
+});
+
+const form = new FormData();
+form.append("avatar", new Blob([imageBytes], { type: "image/png" }), "avatar.png");
+await client.postRequest("/avatars", { body: form });
+
+await client.putRequest("/archive", {
+  body: new Uint8Array([0x50, 0x4b, 0x03, 0x04]),
+  headers: { "Content-Type": "application/zip" },
+});
+```
+
+For a `ReadableStream` body, lighty sets `duplex: "half"`, as required by Node's `fetch` implementation:
+
+```ts
+await client.postRequest("/events", {
+  body: new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode("event: connected\n\n"));
+      controller.close();
+    },
+  }),
+});
+```

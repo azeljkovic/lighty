@@ -97,6 +97,44 @@ describe("requests", () => {
     assert.equal(calls[0].init.body, JSON.stringify({ name: "Ada" }));
   });
 
+  it("passes native fetch bodies through without a JSON content type", async (t) => {
+    const calls = [];
+    const formData = new FormData();
+    const binary = new Uint8Array([1, 2, 3]);
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("streamed"));
+        controller.close();
+      },
+    });
+
+    t.mock.method(globalThis, "fetch", async (_url, init) => {
+      calls.push(init);
+      return jsonResponse({ ok: true });
+    });
+
+    formData.append("name", "Ada");
+
+    for (const body of ["plain text", formData, binary, stream]) {
+      await customRequest({
+        method: "POST",
+        url: "https://example.test/bodies",
+        body,
+        logger: false,
+      });
+    }
+
+    assert.equal(calls[0].body, "plain text");
+    assert.equal(calls[1].body, formData);
+    assert.equal(calls[2].body, binary);
+    assert.equal(calls[3].body, stream);
+    assert.equal(calls[3].duplex, "half");
+
+    for (const call of calls) {
+      assert.equal(new Headers(call.headers).has("content-type"), false);
+    }
+  });
+
   it("throws HttpRequestError with parsed response details for HTTP errors", async (t) => {
     t.mock.method(globalThis, "fetch", async () =>
       jsonResponse(

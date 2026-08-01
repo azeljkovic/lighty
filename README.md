@@ -202,7 +202,7 @@ await client.getRequest("/anything", {
 
 ### Request Bodies
 
-When `body` is provided, lighty JSON-stringifies it and sets `Content-Type: application/json` unless you override that header.
+Objects are JSON-stringified and receive `Content-Type: application/json` unless you override that header. Native `fetch` bodies—raw strings, `FormData`, `Blob`, `ArrayBuffer` and typed arrays, `URLSearchParams`, and `ReadableStream`—are passed through unchanged.
 Every request also sends `Accept: application/json` unless you override it.
 
 ```js
@@ -212,6 +212,10 @@ await client.postRequest("/anything", {
     transparent: false,
   },
 });
+
+const form = new FormData();
+form.append("name", "Ada");
+await client.postRequest("/users", { body: form });
 ```
 
 ### Response Parsing
