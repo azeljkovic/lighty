@@ -20,13 +20,13 @@ interface RequestResult<TResponse = unknown> {
 
 ## Result fields
 
-| Field | Description |
-| --- | --- |
-| `status` | Numeric HTTP status from the response. |
-| `ok` | Same meaning as `Response.ok`; true for status codes in the 200-299 range. |
-| `headers` | Plain object created from `response.headers.entries()`. |
-| `data` | Parsed response body. The type is controlled by `TResponse`. |
-| `response` | The original `Response` object returned by `fetch`. |
+| Field      | Description                                                                |
+| ---------- | -------------------------------------------------------------------------- |
+| `status`   | Numeric HTTP status from the response.                                     |
+| `ok`       | Same meaning as `Response.ok`; true for status codes in the 200-299 range. |
+| `headers`  | Plain object created from `response.headers.entries()`.                    |
+| `data`     | Parsed response body. `TResponse` controls its compile-time type only.     |
+| `response` | The original `Response` object returned by `fetch`.                        |
 
 ## Automatic parsing
 
@@ -38,10 +38,59 @@ When `responseType` is omitted, `lighty` uses the response headers and body cont
 - Other responses are read as text.
 
 ```ts
-const result = await client.getRequest<{id: string}>("/users/1");
+const result = await client.getRequest<{ id: string }>("/users/1");
 
 result.data.id;
 ```
+
+The response generic is a compile-time cast, not runtime validation. For example,
+the code above lets TypeScript treat `data.id` as a string even if the server
+returns a number. Use `responseParser` to validate or transform the parsed value.
+
+## Runtime validation and transformation
+
+`responseParser` runs after lighty's normal response parsing. It accepts either a
+function or a schema-like object with a `parse(value)` method, so schemas from
+libraries such as Zod and Valibot can be passed directly. Its return value becomes
+`result.data`; a thrown error rejects the request.
+
+```ts
+const User = {
+  parse(value: unknown) {
+    if (
+      typeof value !== "object" ||
+      value === null ||
+      !("id" in value) ||
+      typeof value.id !== "string"
+    ) {
+      throw new TypeError("Expected a user with a string id");
+    }
+
+    return { id: value.id };
+  },
+};
+
+const result = await client.getRequest("/users/1", {
+  responseParser: User,
+});
+
+result.data.id;
+```
+
+Parser functions additionally receive the raw `Response`, which is useful for
+response-aware transformations:
+
+```ts
+const result = await client.getRequest("/users/1", {
+  responseParser: (body, response) => ({
+    body,
+    requestId: response.headers.get("x-request-id"),
+  }),
+});
+```
+
+Set `responseParser` in `createClient` to use the same parser for every request;
+a request-level parser overrides the client default.
 
 ## Forced responseType
 
@@ -76,14 +125,14 @@ type RequestResponseType =
   | "none";
 ```
 
-| Type | Runtime result |
-| --- | --- |
-| `json` | Reads text and parses it as JSON. Throws `InvalidJsonResponseError` on invalid JSON. |
-| `text` | Reads with `response.text()`. |
-| `arrayBuffer` | Reads with `response.arrayBuffer()`. |
-| `blob` | Reads with `response.blob()`. |
-| `stream` | Returns `response.body`. |
-| `none` | Does not read the body and returns `undefined`. |
+| Type          | Runtime result                                                                       |
+| ------------- | ------------------------------------------------------------------------------------ |
+| `json`        | Reads text and parses it as JSON. Throws `InvalidJsonResponseError` on invalid JSON. |
+| `text`        | Reads with `response.text()`.                                                        |
+| `arrayBuffer` | Reads with `response.arrayBuffer()`.                                                 |
+| `blob`        | Reads with `response.blob()`.                                                        |
+| `stream`      | Returns `response.body`.                                                             |
+| `none`        | Does not read the body and returns `undefined`.                                      |
 
 ## Empty responses
 
@@ -108,4 +157,3 @@ console.log(result.response.redirected);
 console.log(result.response.type);
 console.log(result.response.url);
 ```
-

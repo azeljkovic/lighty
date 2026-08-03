@@ -1,6 +1,6 @@
 import { redactBody } from "../utils/logger.js";
 import { InvalidJsonResponseError } from "./errors.js";
-import type { RequestResponseType } from "./types.js";
+import type { RequestResponseType, ResponseParserHook } from "./types.js";
 
 export async function parseResponseBody<TResponse>(
   response: Response,
@@ -58,6 +58,20 @@ export async function parseResponseBody<TResponse>(
   }
 
   return text as TResponse;
+}
+
+export async function applyResponseParser<TResponse>(
+  body: unknown,
+  response: Response,
+  parser?: ResponseParserHook<TResponse>,
+): Promise<TResponse> {
+  if (parser === undefined) {
+    return body as TResponse;
+  }
+
+  return typeof parser === "function"
+    ? parser(body, response)
+    : parser.parse(body);
 }
 
 function isJsonContentType(contentType: string): boolean {

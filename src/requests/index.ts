@@ -22,6 +22,9 @@ export type {
   RequestRedirectMode,
   RequestResponseType,
   RequestResult,
+  ResponseParser,
+  ResponseParserHook,
+  ResponseSchema,
 } from "./types.js";
 export type {
   HttpRequestErrorOptions,

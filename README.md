@@ -64,6 +64,8 @@ interface RequestResult<TResponse = unknown> {
 
 Most assertion helpers accept either the full `RequestResult` or the raw value they assert against. For example, response and header assertions can use a `RequestResult` or a `Response`; body assertions can use a `RequestResult` or the parsed body directly.
 
+The response generic, such as `getRequest<User>()`, is a compile-time type assertion only; it does not validate the server response. Use the optional `responseParser` hook with a parser or a schema-like `{parse(value)}` object when you need runtime validation.
+
 ## Exports
 
 ```js

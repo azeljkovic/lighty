@@ -6,72 +6,76 @@ import type {
   ClientConfig,
   MethodConfig,
   RequestConfig,
+  ResponseParserHook,
 } from "./types.js";
 
-export function createClient(config: ClientConfig = {}): Client {
-  const clientRequest = <TResponse = unknown, TBody = unknown>(
-    requestConfig: RequestConfig<TBody>,
-  ) => customRequest<TResponse, TBody>(mergeClientConfig(config, requestConfig));
+export function createClient<TDefaultResponse = unknown>(
+  config: ClientConfig<TDefaultResponse> = {},
+): Client<TDefaultResponse> {
+  const clientRequest = <TResponse = TDefaultResponse, TBody = unknown>(
+    requestConfig: RequestConfig<TBody, TResponse>,
+  ) =>
+    customRequest<TResponse, TBody>(mergeClientConfig(config, requestConfig));
 
   return {
     customRequest: clientRequest,
-    getRequest: <TResponse = unknown>(
+    getRequest: <TResponse = TDefaultResponse>(
       url: string,
-      requestConfig: BodylessMethodConfig = {},
+      requestConfig: BodylessMethodConfig<TResponse> = {},
     ) =>
       clientRequest<TResponse>({
         ...requestConfig,
         method: "GET",
         url,
       }),
-    postRequest: <TResponse = unknown, TBody = unknown>(
+    postRequest: <TResponse = TDefaultResponse, TBody = unknown>(
       url: string,
-      requestConfig: MethodConfig<TBody> = {},
+      requestConfig: MethodConfig<TBody, TResponse> = {},
     ) =>
       clientRequest<TResponse, TBody>({
         ...requestConfig,
         method: "POST",
         url,
       }),
-    putRequest: <TResponse = unknown, TBody = unknown>(
+    putRequest: <TResponse = TDefaultResponse, TBody = unknown>(
       url: string,
-      requestConfig: MethodConfig<TBody> = {},
+      requestConfig: MethodConfig<TBody, TResponse> = {},
     ) =>
       clientRequest<TResponse, TBody>({
         ...requestConfig,
         method: "PUT",
         url,
       }),
-    patchRequest: <TResponse = unknown, TBody = unknown>(
+    patchRequest: <TResponse = TDefaultResponse, TBody = unknown>(
       url: string,
-      requestConfig: MethodConfig<TBody> = {},
+      requestConfig: MethodConfig<TBody, TResponse> = {},
     ) =>
       clientRequest<TResponse, TBody>({
         ...requestConfig,
         method: "PATCH",
         url,
       }),
-    deleteRequest: <TResponse = unknown>(
+    deleteRequest: <TResponse = TDefaultResponse>(
       url: string,
-      requestConfig: BodylessMethodConfig = {},
+      requestConfig: BodylessMethodConfig<TResponse> = {},
     ) =>
       clientRequest<TResponse>({
         ...requestConfig,
         method: "DELETE",
         url,
       }),
-    headRequest: <TResponse = unknown>(
+    headRequest: <TResponse = TDefaultResponse>(
       url: string,
-      requestConfig: BodylessMethodConfig = {},
+      requestConfig: BodylessMethodConfig<TResponse> = {},
     ) =>
       clientRequest<TResponse>({
         ...requestConfig,
         method: "HEAD",
         url,
       }),
-    optionsRequest: <TResponse = unknown>(
+    optionsRequest: <TResponse = TDefaultResponse>(
       url: string,
-      requestConfig: BodylessMethodConfig = {},
+      requestConfig: BodylessMethodConfig<TResponse> = {},
     ) =>
       clientRequest<TResponse>({
         ...requestConfig,
@@ -81,10 +85,10 @@ export function createClient(config: ClientConfig = {}): Client {
   };
 }
 
-function mergeClientConfig<TBody>(
+function mergeClientConfig<TBody, TResponse>(
   clientConfig: ClientConfig,
-  requestConfig: RequestConfig<TBody>,
-): RequestConfig<TBody> {
+  requestConfig: RequestConfig<TBody, TResponse>,
+): RequestConfig<TBody, TResponse> {
   return {
     ...requestConfig,
     url: resolveClientUrl(requestConfig.url, clientConfig.baseUrl),
@@ -93,6 +97,11 @@ function mergeClientConfig<TBody>(
     throwOnHttpError:
       requestConfig.throwOnHttpError ?? clientConfig.throwOnHttpError,
     responseType: requestConfig.responseType ?? clientConfig.responseType,
+    responseParser:
+      requestConfig.responseParser ??
+      (clientConfig.responseParser as
+        | ResponseParserHook<TResponse>
+        | undefined),
     redirect: requestConfig.redirect ?? clientConfig.redirect,
     logger: requestConfig.logger ?? clientConfig.logger,
   };

@@ -7,7 +7,7 @@ import type {
 
 export function getRequest<TResponse = unknown>(
   url: string,
-  config: BodylessMethodConfig = {},
+  config: BodylessMethodConfig<TResponse> = {},
 ): Promise<RequestResult<TResponse>> {
   return customRequest<TResponse>({
     ...config,
@@ -18,7 +18,7 @@ export function getRequest<TResponse = unknown>(
 
 export function postRequest<TResponse = unknown, TBody = unknown>(
   url: string,
-  config: MethodConfig<TBody> = {},
+  config: MethodConfig<TBody, TResponse> = {},
 ): Promise<RequestResult<TResponse>> {
   return customRequest<TResponse, TBody>({
     ...config,
@@ -29,7 +29,7 @@ export function postRequest<TResponse = unknown, TBody = unknown>(
 
 export function putRequest<TResponse = unknown, TBody = unknown>(
   url: string,
-  config: MethodConfig<TBody> = {},
+  config: MethodConfig<TBody, TResponse> = {},
 ): Promise<RequestResult<TResponse>> {
   return customRequest<TResponse, TBody>({
     ...config,
@@ -40,7 +40,7 @@ export function putRequest<TResponse = unknown, TBody = unknown>(
 
 export function patchRequest<TResponse = unknown, TBody = unknown>(
   url: string,
-  config: MethodConfig<TBody> = {},
+  config: MethodConfig<TBody, TResponse> = {},
 ): Promise<RequestResult<TResponse>> {
   return customRequest<TResponse, TBody>({
     ...config,
@@ -51,7 +51,7 @@ export function patchRequest<TResponse = unknown, TBody = unknown>(
 
 export function deleteRequest<TResponse = unknown>(
   url: string,
-  config: BodylessMethodConfig = {},
+  config: BodylessMethodConfig<TResponse> = {},
 ): Promise<RequestResult<TResponse>> {
   return customRequest<TResponse>({
     ...config,
@@ -62,7 +62,7 @@ export function deleteRequest<TResponse = unknown>(
 
 export function headRequest<TResponse = unknown>(
   url: string,
-  config: BodylessMethodConfig = {},
+  config: BodylessMethodConfig<TResponse> = {},
 ): Promise<RequestResult<TResponse>> {
   return customRequest<TResponse>({
     ...config,
@@ -73,7 +73,7 @@ export function headRequest<TResponse = unknown>(
 
 export function optionsRequest<TResponse = unknown>(
   url: string,
-  config: BodylessMethodConfig = {},
+  config: BodylessMethodConfig<TResponse> = {},
 ): Promise<RequestResult<TResponse>> {
   return customRequest<TResponse>({
     ...config,
