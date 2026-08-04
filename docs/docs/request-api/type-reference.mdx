@@ -195,7 +195,10 @@ await postRequest<{ id: string }, { name: string }>(
 ## BodylessMethodConfig
 
 ```ts
-type BodylessMethodConfig = Omit<MethodConfig, "body">;
+type BodylessMethodConfig<TResponse = unknown> = Omit<
+  MethodConfig<never, TResponse>,
+  "body"
+>;
 ```
 
 Used by bodyless method helpers.
@@ -232,37 +235,37 @@ Defaults shared by a client returned from `createClient`.
 ## Client
 
 ```ts
-interface Client {
-  customRequest<TResponse = unknown, TBody = unknown>(
-    config: RequestConfig<TBody>,
+interface Client<TDefaultResponse = unknown> {
+  customRequest<TResponse = TDefaultResponse, TBody = unknown>(
+    config: RequestConfig<TBody, TResponse>,
   ): Promise<RequestResult<TResponse>>;
-  getRequest<TResponse = unknown>(
+  getRequest<TResponse = TDefaultResponse>(
     url: string,
-    config?: BodylessMethodConfig,
+    config?: BodylessMethodConfig<TResponse>,
   ): Promise<RequestResult<TResponse>>;
-  postRequest<TResponse = unknown, TBody = unknown>(
+  postRequest<TResponse = TDefaultResponse, TBody = unknown>(
     url: string,
-    config?: MethodConfig<TBody>,
+    config?: MethodConfig<TBody, TResponse>,
   ): Promise<RequestResult<TResponse>>;
-  putRequest<TResponse = unknown, TBody = unknown>(
+  putRequest<TResponse = TDefaultResponse, TBody = unknown>(
     url: string,
-    config?: MethodConfig<TBody>,
+    config?: MethodConfig<TBody, TResponse>,
   ): Promise<RequestResult<TResponse>>;
-  patchRequest<TResponse = unknown, TBody = unknown>(
+  patchRequest<TResponse = TDefaultResponse, TBody = unknown>(
     url: string,
-    config?: MethodConfig<TBody>,
+    config?: MethodConfig<TBody, TResponse>,
   ): Promise<RequestResult<TResponse>>;
-  deleteRequest<TResponse = unknown>(
+  deleteRequest<TResponse = TDefaultResponse>(
     url: string,
-    config?: BodylessMethodConfig,
+    config?: BodylessMethodConfig<TResponse>,
   ): Promise<RequestResult<TResponse>>;
-  headRequest<TResponse = unknown>(
+  headRequest<TResponse = TDefaultResponse>(
     url: string,
-    config?: BodylessMethodConfig,
+    config?: BodylessMethodConfig<TResponse>,
   ): Promise<RequestResult<TResponse>>;
-  optionsRequest<TResponse = unknown>(
+  optionsRequest<TResponse = TDefaultResponse>(
     url: string,
-    config?: BodylessMethodConfig,
+    config?: BodylessMethodConfig<TResponse>,
   ): Promise<RequestResult<TResponse>>;
 }
 ```

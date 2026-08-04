@@ -50,9 +50,10 @@ returns a number. Use `responseParser` to validate or transform the parsed value
 ## Runtime validation and transformation
 
 `responseParser` runs after lighty's normal response parsing. It accepts either a
-function or a schema-like object with a `parse(value)` method, so schemas from
-libraries such as Zod and Valibot can be passed directly. Its return value becomes
-`result.data`; a thrown error rejects the request.
+function or a schema-like object with a `parse(value)` method, such as a Zod
+schema. For schema libraries that do not expose that method, pass a function
+that calls the library's parser. Its return value becomes `result.data`; a thrown
+error rejects the request.
 
 ```ts
 const User = {

@@ -121,17 +121,21 @@ Every request starts with:
 
 ```ts
 {
-  Accept: "application/json";
+  Accept: "application/json",
 }
 ```
 
-When `body` is not `null` or `undefined`, `lighty` also adds:
+When `lighty` JSON-serializes a non-null body, it also adds:
 
 ```ts
 {
   "Content-Type": "application/json"
 }
 ```
+
+Native fetch bodies such as strings, `FormData`, `Blob`, binary data,
+`URLSearchParams`, and `ReadableStream` values are passed through without this
+default `Content-Type`. See [Params and body](./params-and-body) for details.
 
 Passing `headers` lets you override either default:
 

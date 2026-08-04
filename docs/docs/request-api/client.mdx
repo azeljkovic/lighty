@@ -6,17 +6,24 @@ description: Create a typed lighty client with shared defaults and method-specif
 
 # Client
 
-`createClient(config?: ClientConfig)` returns a `Client` object with typed request methods. It is the best fit for integration tests that call the same service repeatedly.
+`createClient` returns a `Client` object with typed request methods. It is the best fit for integration tests that call the same service repeatedly.
+
+```ts
+function createClient<TDefaultResponse = unknown>(
+  config: ClientConfig<TDefaultResponse> = {},
+): Client<TDefaultResponse>;
+```
 
 ## ClientConfig
 
 ```ts
-interface ClientConfig {
+interface ClientConfig<TResponse = unknown> {
   baseUrl?: string;
   headers?: HeadersInit;
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   responseType?: RequestResponseType;
+  responseParser?: ResponseParserHook<TResponse>;
   redirect?: RequestRedirectMode;
   logger?: RequestLoggerConfig;
 }
@@ -82,51 +89,53 @@ The request sends the request-level authorization header and does not keep the o
 ## Client methods
 
 ```ts
-interface Client {
-  customRequest<TResponse = unknown, TBody = unknown>(
-    config: RequestConfig<TBody>,
+interface Client<TDefaultResponse = unknown> {
+  customRequest<TResponse = TDefaultResponse, TBody = unknown>(
+    config: RequestConfig<TBody, TResponse>,
   ): Promise<RequestResult<TResponse>>;
 
-  getRequest<TResponse = unknown>(
+  getRequest<TResponse = TDefaultResponse>(
     url: string,
-    config?: BodylessMethodConfig,
+    config?: BodylessMethodConfig<TResponse>,
   ): Promise<RequestResult<TResponse>>;
 
-  postRequest<TResponse = unknown, TBody = unknown>(
+  postRequest<TResponse = TDefaultResponse, TBody = unknown>(
     url: string,
-    config?: MethodConfig<TBody>,
+    config?: MethodConfig<TBody, TResponse>,
   ): Promise<RequestResult<TResponse>>;
 
-  putRequest<TResponse = unknown, TBody = unknown>(
+  putRequest<TResponse = TDefaultResponse, TBody = unknown>(
     url: string,
-    config?: MethodConfig<TBody>,
+    config?: MethodConfig<TBody, TResponse>,
   ): Promise<RequestResult<TResponse>>;
 
-  patchRequest<TResponse = unknown, TBody = unknown>(
+  patchRequest<TResponse = TDefaultResponse, TBody = unknown>(
     url: string,
-    config?: MethodConfig<TBody>,
+    config?: MethodConfig<TBody, TResponse>,
   ): Promise<RequestResult<TResponse>>;
 
-  deleteRequest<TResponse = unknown>(
+  deleteRequest<TResponse = TDefaultResponse>(
     url: string,
-    config?: BodylessMethodConfig,
+    config?: BodylessMethodConfig<TResponse>,
   ): Promise<RequestResult<TResponse>>;
 
-  headRequest<TResponse = unknown>(
+  headRequest<TResponse = TDefaultResponse>(
     url: string,
-    config?: BodylessMethodConfig,
+    config?: BodylessMethodConfig<TResponse>,
   ): Promise<RequestResult<TResponse>>;
 
-  optionsRequest<TResponse = unknown>(
+  optionsRequest<TResponse = TDefaultResponse>(
     url: string,
-    config?: BodylessMethodConfig,
+    config?: BodylessMethodConfig<TResponse>,
   ): Promise<RequestResult<TResponse>>;
 }
 ```
 
 ## Typed responses and bodies
 
-The first generic controls `result.data`. For body-capable helpers, the second generic controls the request body type.
+The first generic controls `result.data`. For body-capable helpers, the second
+generic controls the request body type. `createClient<T>()` supplies the default
+response type for each method; a method-level generic overrides it.
 
 ```ts
 type CreateUserBody = {
@@ -148,6 +157,18 @@ const result = await client.postRequest<User, CreateUserBody>("/users", {
 });
 
 result.data.id;
+```
+
+For example, a client whose endpoints normally return `User` values can provide
+that default once:
+
+```ts
+const users = createClient<User>({
+  baseUrl: "https://api.example.test",
+});
+
+const result = await users.getRequest("/users/ada");
+result.data.id; // string
 ```
 
 ## Overriding client defaults
