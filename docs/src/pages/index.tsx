@@ -173,12 +173,6 @@ function HomepageHeader() {
               >
                 Type Reference
               </Link>
-              <Link
-                className={styles.ghostButton}
-                to="https://github.com/azeljkovic/lighty"
-              >
-                GitHub
-              </Link>
             </div>
           </div>
 
