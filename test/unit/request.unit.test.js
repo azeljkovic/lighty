@@ -218,6 +218,49 @@ describe("requests", () => {
     );
   });
 
+  it("applies a response parser after parsing and passes the raw response", async (t) => {
+    t.mock.method(globalThis, "fetch", async () =>
+      jsonResponse({ id: 7, name: "Ada" }),
+    );
+
+    let parserResponse;
+    const result = await customRequest({
+      method: "GET",
+      url: "https://example.test/users/ada",
+      responseParser: (body, response) => {
+        parserResponse = response;
+        assert.deepEqual(body, { id: 7, name: "Ada" });
+
+        return { id: String(body.id), name: body.name };
+      },
+      logger: false,
+    });
+
+    assert.ok(parserResponse instanceof Response);
+    assert.deepEqual(result.data, { id: "7", name: "Ada" });
+  });
+
+  it("accepts schema-like response parsers as client defaults", async (t) => {
+    t.mock.method(globalThis, "fetch", async () =>
+      jsonResponse({ id: 7, name: "Ada", role: "admin" }),
+    );
+
+    const client = createClient({
+      baseUrl: "https://example.test",
+      responseParser: {
+        parse(body) {
+          assert.deepEqual(body, { id: 7, name: "Ada", role: "admin" });
+          return { id: body.id, name: body.name };
+        },
+      },
+      logger: false,
+    });
+
+    const result = await client.getRequest("/users/ada");
+
+    assert.deepEqual(result.data, { id: 7, name: "Ada" });
+  });
+
   for (const contentType of [
     "application/problem+json",
     "application/vnd.api+json; charset=utf-8",

@@ -15,7 +15,7 @@ The request API defines three configuration shapes:
 ## RequestConfig
 
 ```ts
-interface RequestConfig<TBody = unknown> {
+interface RequestConfig<TBody = unknown, TResponse = unknown> {
   method: HttpMethod;
   url: string;
   headers?: HeadersInit;
@@ -25,6 +25,7 @@ interface RequestConfig<TBody = unknown> {
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   responseType?: RequestResponseType;
+  responseParser?: ResponseParserHook<TResponse>;
   redirect?: RequestRedirectMode;
   logger?: RequestLoggerConfig;
 }
@@ -33,7 +34,7 @@ interface RequestConfig<TBody = unknown> {
 Use `RequestConfig` with `customRequest`:
 
 ```ts
-import {customRequest} from "@azeljkovic/lighty";
+import { customRequest } from "@azeljkovic/lighty";
 
 const result = await customRequest({
   method: "PATCH",
@@ -55,7 +56,7 @@ const result = await customRequest({
 ## MethodConfig
 
 ```ts
-interface MethodConfig<TBody = unknown> {
+interface MethodConfig<TBody = unknown, TResponse = unknown> {
   headers?: HeadersInit;
   params?: RequestParams;
   body?: TBody;
@@ -63,6 +64,7 @@ interface MethodConfig<TBody = unknown> {
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   responseType?: RequestResponseType;
+  responseParser?: ResponseParserHook<TResponse>;
   redirect?: RequestRedirectMode;
   logger?: RequestLoggerConfig;
 }
@@ -98,19 +100,20 @@ await client.getRequest("/users", {
 
 ## Option reference
 
-| Option | Type | Applies to | Behavior |
-| --- | --- | --- | --- |
-| `method` | `HttpMethod` | `RequestConfig` | HTTP method passed to `fetch`. |
-| `url` | `string` | `RequestConfig` and method helper argument | Absolute URL for direct helpers, or relative/absolute URL for clients. |
-| `headers` | `HeadersInit` | All configs | Merged with defaults. User headers override default headers case-insensitively. |
-| `params` | `RequestParams` | All configs | Appended to the URL query string. |
-| `body` | `TBody` | `RequestConfig` and `MethodConfig` | JSON-stringified by default. Native `fetch` bodies, including text, `FormData`, binary data, and streams, are passed through. |
-| `signal` | `AbortSignal` | All configs | Passed to `fetch`; combined with `timeoutMs` when both are provided. |
-| `timeoutMs` | `number` | All configs | Creates an `AbortSignal.timeout(timeoutMs)`. |
-| `throwOnHttpError` | `boolean` | All configs | Defaults to returning non-OK HTTP responses as results. Set `true` to throw. |
-| `responseType` | `RequestResponseType` | All configs | Forces body parsing instead of relying on `content-type`. |
-| `redirect` | `RequestRedirectMode` | All configs | Passed through to `fetch` as `redirect`. |
-| `logger` | `RequestLoggerConfig` | All configs | Controls built-in or custom request logging. |
+| Option             | Type                            | Applies to                                 | Behavior                                                                                                                      |
+| ------------------ | ------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `method`           | `HttpMethod`                    | `RequestConfig`                            | HTTP method passed to `fetch`.                                                                                                |
+| `url`              | `string`                        | `RequestConfig` and method helper argument | Absolute URL for direct helpers, or relative/absolute URL for clients.                                                        |
+| `headers`          | `HeadersInit`                   | All configs                                | Merged with defaults. User headers override default headers case-insensitively.                                               |
+| `params`           | `RequestParams`                 | All configs                                | Appended to the URL query string.                                                                                             |
+| `body`             | `TBody`                         | `RequestConfig` and `MethodConfig`         | JSON-stringified by default. Native `fetch` bodies, including text, `FormData`, binary data, and streams, are passed through. |
+| `signal`           | `AbortSignal`                   | All configs                                | Passed to `fetch`; combined with `timeoutMs` when both are provided.                                                          |
+| `timeoutMs`        | `number`                        | All configs                                | Creates an `AbortSignal.timeout(timeoutMs)`.                                                                                  |
+| `throwOnHttpError` | `boolean`                       | All configs                                | Defaults to returning non-OK HTTP responses as results. Set `true` to throw.                                                  |
+| `responseType`     | `RequestResponseType`           | All configs                                | Forces body parsing instead of relying on `content-type`.                                                                     |
+| `responseParser`   | `ResponseParserHook<TResponse>` | All configs                                | Validates or transforms the parsed response body.                                                                             |
+| `redirect`         | `RequestRedirectMode`           | All configs                                | Passed through to `fetch` as `redirect`.                                                                                      |
+| `logger`           | `RequestLoggerConfig`           | All configs                                | Controls built-in or custom request logging.                                                                                  |
 
 ## Default request headers
 
@@ -118,7 +121,7 @@ Every request starts with:
 
 ```ts
 {
-  Accept: "application/json"
+  Accept: "application/json";
 }
 ```
 

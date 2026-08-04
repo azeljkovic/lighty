@@ -56,14 +56,14 @@ type RequestResponseType =
 
 Controls how `lighty` reads the response body.
 
-| Value | Parser |
-| --- | --- |
-| `json` | `response.text()` followed by `JSON.parse`. |
-| `text` | `response.text()`. |
-| `arrayBuffer` | `response.arrayBuffer()`. |
-| `blob` | `response.blob()`. |
-| `stream` | Returns `response.body`. |
-| `none` | Returns `undefined` without reading the body. |
+| Value         | Parser                                        |
+| ------------- | --------------------------------------------- |
+| `json`        | `response.text()` followed by `JSON.parse`.   |
+| `text`        | `response.text()`.                            |
+| `arrayBuffer` | `response.arrayBuffer()`.                     |
+| `blob`        | `response.blob()`.                            |
+| `stream`      | Returns `response.body`.                      |
+| `none`        | Returns `undefined` without reading the body. |
 
 ## RequestRedirectMode
 
@@ -102,10 +102,34 @@ result.data.name;
 result.response.url;
 ```
 
+`TResponse` is a compile-time type assertion only. It does not validate the
+response body at runtime; use `ResponseParserHook` when validation is required.
+
+## ResponseParserHook
+
+```ts
+type ResponseParser<TResponse> = (
+  body: unknown,
+  response: Response,
+) => TResponse | Promise<TResponse>;
+
+interface ResponseSchema<TResponse> {
+  parse(body: unknown): TResponse | Promise<TResponse>;
+}
+
+type ResponseParserHook<TResponse> =
+  | ResponseParser<TResponse>
+  | ResponseSchema<TResponse>;
+```
+
+An optional `responseParser` applies this hook after the built-in parser. A
+schema-like object is supported so `responseParser: UserSchema` works with schema
+libraries that expose `parse`.
+
 ## RequestConfig
 
 ```ts
-interface RequestConfig<TBody = unknown> {
+interface RequestConfig<TBody = unknown, TResponse = unknown> {
   method: HttpMethod;
   url: string;
   headers?: HeadersInit;
@@ -115,6 +139,7 @@ interface RequestConfig<TBody = unknown> {
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   responseType?: RequestResponseType;
+  responseParser?: ResponseParserHook<TResponse>;
   redirect?: RequestRedirectMode;
   logger?: RequestLoggerConfig;
 }
@@ -122,24 +147,25 @@ interface RequestConfig<TBody = unknown> {
 
 The complete request config accepted by `customRequest`.
 
-| Property | Required | Description |
-| --- | --- | --- |
-| `method` | Yes | HTTP method. `HttpMethod` restricts it to the methods supported by lighty. |
-| `url` | Yes | Absolute request URL for direct requests. With a client, relative URLs can be resolved through `baseUrl`. |
-| `headers` | No | Any `HeadersInit` accepted by `fetch`: plain object, tuple array, or `Headers`. |
-| `params` | No | Query parameters appended to `url`. |
-| `body` | No | JSON-serialized unless it is a native `fetch` body (`string`, `FormData`, `Blob`, binary data, `URLSearchParams`, or `ReadableStream`), which is passed through. |
-| `signal` | No | Abort signal passed to `fetch`. |
-| `timeoutMs` | No | Timeout in milliseconds. |
-| `throwOnHttpError` | No | Defaults to returning non-OK responses. Set `true` to throw. |
-| `responseType` | No | Explicit response parser. |
-| `redirect` | No | Fetch redirect behavior. |
-| `logger` | No | Logger level, disabled flag, or custom logger. |
+| Property           | Required | Description                                                                                                                                                      |
+| ------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `method`           | Yes      | HTTP method. `HttpMethod` restricts it to the methods supported by lighty.                                                                                       |
+| `url`              | Yes      | Absolute request URL for direct requests. With a client, relative URLs can be resolved through `baseUrl`.                                                        |
+| `headers`          | No       | Any `HeadersInit` accepted by `fetch`: plain object, tuple array, or `Headers`.                                                                                  |
+| `params`           | No       | Query parameters appended to `url`.                                                                                                                              |
+| `body`             | No       | JSON-serialized unless it is a native `fetch` body (`string`, `FormData`, `Blob`, binary data, `URLSearchParams`, or `ReadableStream`), which is passed through. |
+| `signal`           | No       | Abort signal passed to `fetch`.                                                                                                                                  |
+| `timeoutMs`        | No       | Timeout in milliseconds.                                                                                                                                         |
+| `throwOnHttpError` | No       | Defaults to returning non-OK responses. Set `true` to throw.                                                                                                     |
+| `responseType`     | No       | Explicit response parser.                                                                                                                                        |
+| `responseParser`   | No       | Runtime response validation or transformation hook.                                                                                                              |
+| `redirect`         | No       | Fetch redirect behavior.                                                                                                                                         |
+| `logger`           | No       | Logger level, disabled flag, or custom logger.                                                                                                                   |
 
 ## MethodConfig
 
 ```ts
-interface MethodConfig<TBody = unknown> {
+interface MethodConfig<TBody = unknown, TResponse = unknown> {
   headers?: HeadersInit;
   params?: RequestParams;
   body?: TBody;
@@ -147,6 +173,7 @@ interface MethodConfig<TBody = unknown> {
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   responseType?: RequestResponseType;
+  responseParser?: ResponseParserHook<TResponse>;
   redirect?: RequestRedirectMode;
   logger?: RequestLoggerConfig;
 }
@@ -155,7 +182,7 @@ interface MethodConfig<TBody = unknown> {
 Used by method-specific helpers where the helper supplies the method and receives URL as a positional argument.
 
 ```ts
-await postRequest<{id: string}, {name: string}>(
+await postRequest<{ id: string }, { name: string }>(
   "https://api.example.test/users",
   {
     body: {
@@ -186,12 +213,13 @@ TypeScript rejects `body` on helpers that use `BodylessMethodConfig`.
 ## ClientConfig
 
 ```ts
-interface ClientConfig {
+interface ClientConfig<TResponse = unknown> {
   baseUrl?: string;
   headers?: HeadersInit;
   timeoutMs?: number;
   throwOnHttpError?: boolean;
   responseType?: RequestResponseType;
+  responseParser?: ResponseParserHook<TResponse>;
   redirect?: RequestRedirectMode;
   logger?: RequestLoggerConfig;
 }
@@ -243,13 +271,13 @@ interface Client {
 
 `types.ts` imports these public platform and library types:
 
-| Type | Source | Role |
-| --- | --- | --- |
-| `HttpMethod` | lighty | Restricts request methods to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, and `HEAD`. |
-| `RequestLoggerConfig` | lighty | Configures built-in or custom logging. |
-| `HeadersInit` | Fetch/Web API | Accepts the same header inputs as native `fetch`. |
-| `AbortSignal` | Fetch/Web API | Allows caller-driven cancellation and timeout composition. |
-| `Response` | Fetch/Web API | Exposes the raw fetch response on `RequestResult.response`. |
+| Type                  | Source        | Role                                                                                         |
+| --------------------- | ------------- | -------------------------------------------------------------------------------------------- |
+| `HttpMethod`          | lighty        | Restricts request methods to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, and `HEAD`. |
+| `RequestLoggerConfig` | lighty        | Configures built-in or custom logging.                                                       |
+| `HeadersInit`         | Fetch/Web API | Accepts the same header inputs as native `fetch`.                                            |
+| `AbortSignal`         | Fetch/Web API | Allows caller-driven cancellation and timeout composition.                                   |
+| `Response`            | Fetch/Web API | Exposes the raw fetch response on `RequestResult.response`.                                  |
 
 ## Error option types
 

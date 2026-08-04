@@ -13,11 +13,15 @@ import {
   createRequestSignal,
   mergeHeaders,
 } from "./internals.js";
-import { getLogResponseBody, parseResponseBody } from "./response.js";
+import {
+  applyResponseParser,
+  getLogResponseBody,
+  parseResponseBody,
+} from "./response.js";
 import type { RequestConfig, RequestResult } from "./types.js";
 
 export async function customRequest<TResponse = unknown, TBody = unknown>(
-  config: RequestConfig<TBody>,
+  config: RequestConfig<TBody, TResponse>,
 ): Promise<RequestResult<TResponse>> {
   const url = buildRequestUrl(config.url, config.params);
   const requestBody = serializeRequestBody(config.body);
@@ -53,10 +57,15 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
       signal: createRequestSignal(config.signal, config.timeoutMs),
     });
 
-    responseBody = await parseResponseBody<TResponse>(
+    const parsedResponseBody = await parseResponseBody(
       response,
       url.toString(),
       config.responseType,
+    );
+    responseBody = await applyResponseParser(
+      parsedResponseBody,
+      response,
+      config.responseParser,
     );
 
     await logResponse(config.logger, {
@@ -133,5 +142,7 @@ function isNativeRequestBody(value: unknown): value is BodyInit {
 }
 
 function isReadableStream(value: unknown): value is ReadableStream {
-  return typeof ReadableStream !== "undefined" && value instanceof ReadableStream;
+  return (
+    typeof ReadableStream !== "undefined" && value instanceof ReadableStream
+  );
 }
