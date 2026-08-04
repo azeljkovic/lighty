@@ -1,57 +1,57 @@
-import {useEffect, useState, type ReactNode} from 'react';
-import Link from '@docusaurus/Link';
-import useBaseUrl from '@docusaurus/useBaseUrl';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import Layout from '@theme/Layout';
-import Heading from '@theme/Heading';
+import { type ReactNode, useEffect, useState } from "react";
+import Link from "@docusaurus/Link";
+import useBaseUrl from "@docusaurus/useBaseUrl";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import Layout from "@theme/Layout";
+import Heading from "@theme/Heading";
 
-import styles from './index.module.css';
+import styles from "./index.module.css";
 
 const features = [
   {
-    title: 'Typed method helpers',
+    title: "Typed method helpers",
     description:
-      'GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, and custom requests all return typed RequestResult values.',
+      "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, and custom requests all return typed RequestResult values.",
   },
   {
-    title: 'Reusable clients',
+    title: "Reusable clients",
     description:
-      'Share base URLs, headers, timeouts, redirect policy, response parsing, and logging across a test suite.',
+      "Share base URLs, headers, timeouts, redirect policy, response parsing, and logging across a test suite.",
   },
   {
-    title: 'Params and JSON bodies',
+    title: "Params and JSON bodies",
     description:
-      'Append primitive and repeated query params, then send JSON request bodies with sensible default headers.',
+      "Append primitive and repeated query params, then send JSON request bodies with sensible default headers.",
   },
   {
-    title: 'Normalized responses',
+    title: "Normalized responses",
     description:
-      'Read status, ok, headers, parsed data, and the original fetch Response from one consistent result shape.',
+      "Read status, ok, headers, parsed data, and the original fetch Response from one consistent result shape.",
   },
   {
-    title: 'Assertion helpers',
+    title: "Assertion helpers",
     description:
-      'Assert status codes, headers, redirects, JSON/text bodies, and common image payloads without test boilerplate.',
+      "Assert status codes, headers, redirects, JSON/text bodies, and common image payloads without test boilerplate.",
   },
   {
-    title: 'Errors with context',
+    title: "Errors with context",
     description:
-      'HTTP and invalid JSON errors keep status, headers, URL, and parsed or raw body details for debugging.',
+      "HTTP and invalid JSON errors keep status, headers, URL, and parsed or raw body details for debugging.",
   },
   {
-    title: 'Fetch-native controls',
+    title: "Fetch-native controls",
     description:
-      'Use AbortSignal, redirect modes, HeadersInit, Response, and runtime fetch behavior directly where it matters.',
+      "Use AbortSignal, redirect modes, HeadersInit, Response, and runtime fetch behavior directly where it matters.",
   },
   {
-    title: 'Redacted logging',
+    title: "Redacted logging",
     description:
-      'Built-in and custom logger hooks redact sensitive headers, params, and body keys before events are emitted.',
+      "Built-in and custom logger hooks redact sensitive headers, params, and body keys before events are emitted.",
   },
   {
-    title: 'Parser overrides',
+    title: "Parser overrides",
     description:
-      'Let lighty infer JSON, text, and binary responses, or force json, text, arrayBuffer, blob, stream, or none.',
+      "Let lighty infer JSON, text, and binary responses, or force json, text, arrayBuffer, blob, stream, or none.",
   },
 ];
 
@@ -62,8 +62,8 @@ const installCommands = [
 ];
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
-  const logoUrl = useBaseUrl('/img/logo.svg');
+  const { siteConfig } = useDocusaurusContext();
+  const logoUrl = useBaseUrl("/img/logo.svg");
   const [installCopied, setInstallCopied] = useState(false);
   const [installCommandIndex, setInstallCommandIndex] = useState(0);
   const installCommand = installCommands[installCommandIndex];
@@ -91,7 +91,6 @@ function HomepageHeader() {
       <div className="container">
         <div className={styles.heroGrid}>
           <div className={styles.heroCopy}>
-            <p className={styles.kicker}>0-dependency Node.js library</p>
             <Heading as="h1" className={styles.title}>
               ⚡️lighty
             </Heading>
@@ -169,9 +168,15 @@ function HomepageHeader() {
               </Link>
               <Link
                 className={styles.secondaryButton}
-                to="/docs/request-api/type-reference"
+                to="/docs/request-api/configuration"
               >
-                Type Reference
+                Request API
+              </Link>
+              <Link
+                className={styles.secondaryButton}
+                to="/docs/assertions/overview"
+              >
+                Assertions
               </Link>
             </div>
           </div>
@@ -213,7 +218,10 @@ function FeatureSection() {
       <div className="container">
         <div className={styles.sectionHeader}>
           <Heading as="h2">Why lighty?</Heading>
-          <p>Raw fetch stays close by, while repeat test setup moves into small typed helpers.</p>
+          <p>
+            Raw fetch stays close by, while repeat test setup moves into small
+            typed helpers.
+          </p>
         </div>
         <div className={styles.featureGrid}>
           {features.map((feature) => (
@@ -234,7 +242,10 @@ function CodeSection() {
       <div className="container">
         <div className={styles.sectionHeader}>
           <Heading as="h2">Create, request, assert</Heading>
-          <p>Configure shared defaults once, then keep each test focused on the behavior it verifies.</p>
+          <p>
+            Configure shared defaults once, then keep each test focused on the
+            behavior it verifies.
+          </p>
         </div>
         <div className={styles.codeGrid}>
           <div className={styles.codePanel}>
@@ -282,17 +293,23 @@ function CommunitySection() {
       <div className="container">
         <Heading as="h2">Start building clearer tests</Heading>
         <p>
-          Learn the request lifecycle, then move from typed clients and response parsing to
-          focused assertions for the behavior your test cares about.
+          Learn the request lifecycle, then move from typed clients and response
+          parsing to focused assertions for the behavior your test cares about.
         </p>
         <div className={styles.buttons}>
           <Link className={styles.primaryButton} to="/docs/intro">
             Read Docs
           </Link>
-          <Link className={styles.secondaryButton} to="/docs/request-api/configuration">
+          <Link
+            className={styles.secondaryButton}
+            to="/docs/request-api/configuration"
+          >
             Request Configuration
           </Link>
-          <Link className={styles.secondaryButton} to="/docs/assertions/overview">
+          <Link
+            className={styles.secondaryButton}
+            to="/docs/assertions/overview"
+          >
             Assertions
           </Link>
         </div>
@@ -302,11 +319,12 @@ function CommunitySection() {
 }
 
 export default function Home(): ReactNode {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
       title={`${siteConfig.title} documentation`}
-      description="Documentation for lighty request helpers and TypeScript request types.">
+      description="Documentation for lighty request helpers and TypeScript request types."
+    >
       <HomepageHeader />
       <main>
         <FeatureSection />
