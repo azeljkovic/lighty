@@ -1,0 +1,107 @@
+---
+sidebar_position: 5
+title: Assertions API Reference
+description: Complete signature reference for lighty's response, header, body, and image assertion helpers.
+---
+
+# Assertions API reference
+
+All assertion helpers are exported individually and through `lightyAssert`. A
+failed check throws Node's `AssertionError`. Response and header helpers accept
+`Response | RequestResult`; body helpers accept `T | RequestResult<T>` unless a
+more specific target is shown below.
+
+```ts
+import {lightyAssert, statusCodeIs} from "@azeljkovic/lighty";
+```
+
+The predicate helpers are synchronous. If their predicate throws, lighty throws
+an `AssertionError` whose `cause` is the original error.
+
+## Response and redirect helpers
+
+`target` is a `Response | RequestResult` for every helper in this table.
+
+| Signature | Passes when |
+| --- | --- |
+| `responseIsOk(target)` | Status is 200–299. |
+| `responseIsSuccessful(target)` | Status is 200–299. |
+| `responseIsRedirect(target)` | Status is 300–399. |
+| `responseWasRedirectedTo(target, url: string | URL)` | Fetch followed a redirect and the final URL has the expected pathname. |
+| `responseRedirectsTo(target, url: string | URL)` | Status is 300–399 and the `Location` header has the expected pathname. |
+| `responseIsClientError(target)` | Status is 400–499. |
+| `responseIsServerError(target)` | Status is 500–599. |
+| `responseIsCreated(target)` | Status is 201. |
+| `responseIsAccepted(target)` | Status is 202. |
+| `responseIsNoContent(target)` | Status is 204. |
+| `responseIsBadRequest(target)` | Status is 400. |
+| `responseIsUnauthorized(target)` | Status is 401. |
+| `responseIsForbidden(target)` | Status is 403. |
+| `responseIsNotFound(target)` | Status is 404. |
+| `responseIsConflict(target)` | Status is 409. |
+| `responseIsUnprocessableEntity(target)` | Status is 422. |
+| `responseIsTooManyRequests(target)` | Status is 429. |
+| `statusCodeIs(target, status: number)` | Status exactly matches. |
+| `statusCodeIsOneOf(target, statuses: number[])` | Status is in the supplied list. |
+| `statusCodeIsInRange(target, min: number, max: number)` | Status is inclusively between `min` and `max`. |
+| `statusCodeIs2xx(target)` | Status is 200–299. |
+| `statusCodeIs3xx(target)` | Status is 300–399. |
+| `statusCodeIs4xx(target)` | Status is 400–499. |
+| `statusCodeIs5xx(target)` | Status is 500–599. |
+
+Redirect comparisons intentionally use URL pathnames only; origins and query
+strings are ignored.
+
+## Header helpers
+
+`target` is a `Response | RequestResult`. Header names use Fetch's
+case-insensitive `Headers` behavior.
+
+| Signature | Behavior |
+| --- | --- |
+| `headerExists(target, name: string)` | Checks that the header exists. |
+| `headerIs(target, name: string, value: string)` | Checks the complete header value. |
+| `headerIncludes(target, name: string, value: string)` | Checks that the header value includes text. |
+| `headerMatches(target, name: string, pattern: RegExp)` | Checks a pattern; global and sticky patterns are reset before use. |
+| `headerSatisfies(target, name: string, predicate, message?)` | Runs a synchronous custom condition after confirming the header exists. |
+| `headerContentTypeIs(target, value: string)` | Exact `content-type` shorthand. |
+
+## Body helpers
+
+`body` is either the parsed value or a `RequestResult` containing that value.
+
+| Signature | Behavior |
+| --- | --- |
+| `bodyEquals(body, expected)` | Deep strict equality. |
+| `bodyContains(body, partial)` | Recursive partial object or positional-array match. |
+| `bodyTextContains(body, text: string)` | Requires text and checks inclusion. |
+| `bodyTextMatches(body, text: string)` | Requires text and checks exact equality. |
+| `bodyHasProperty(body, name, value?)` | Requires a non-null object and checks an own property, optionally by deep strict equality. |
+| `bodyIncludesProperties(body, properties)` | Requires a non-null object and checks several own properties. |
+| `bodyPathEquals(body, path: string | readonly (string | number)[], value)` | Checks a dot, bracket, or segment path by deep strict equality. |
+| `bodyMatches(body, predicate, message?)` | Runs a synchronous custom condition. |
+| `bodyIsArray(body)` | Requires an array and narrows its TypeScript type. |
+| `bodyArrayLengthIs(body, length: number)` | Requires an array with exactly `length` items. |
+| `bodyArrayContains(body, item)` | Requires an array containing a deep-strict-equal item. |
+| `bodyArrayContainsItemMatching(body, predicate, message?)` | Requires an array with an item satisfying the synchronous predicate. |
+| `bodyArrayIsNotEmpty(body)` | Requires a non-empty array. |
+| `bodyArrayIsEmpty(body)` | Requires an empty array. |
+| `bodyHasLength(body, length: number)` | Requires a numeric `length` and checks exact equality. |
+| `bodyLengthIsGreaterThan(body, length: number)` | Requires a numeric `length` greater than `length`. |
+| `bodyLengthIsAtLeast(body, length: number)` | Requires a numeric `length` at least `length`. |
+| `bodyObjectIsEmpty(body)` | Requires an object with no own keys and narrows its TypeScript type. |
+| `bodyIsNoContent(body)` | Passes for `null`, `undefined`, or `""`. |
+
+## Image helpers
+
+These helpers require the complete request result because they check both the
+payload and the exact media type (ignoring `content-type` parameters).
+
+| Signature | Required result |
+| --- | --- |
+| `bodyIsPng(result)` | `RequestResult<ArrayBuffer>` with `image/png` and a PNG signature. |
+| `bodyIsJpeg(result)` | `RequestResult<ArrayBuffer>` with `image/jpeg` and JPEG boundary markers. |
+| `bodyIsWebp(result)` | `RequestResult<ArrayBuffer>` with `image/webp` and RIFF/WEBP markers. |
+| `bodyIsSvg(result)` | `RequestResult<string>` with `image/svg+xml` and SVG markup. |
+
+Request raster images with `responseType: "arrayBuffer"`; request SVG as text.

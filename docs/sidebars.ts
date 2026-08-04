@@ -36,6 +36,7 @@ const sidebars: SidebarsConfig = {
         'assertions/responses',
         'assertions/headers',
         'assertions/bodies',
+        'assertions/api-reference',
       ],
     },
   ],

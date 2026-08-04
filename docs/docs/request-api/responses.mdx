@@ -32,7 +32,9 @@ interface RequestResult<TResponse = unknown> {
 
 When `responseType` is omitted, `lighty` uses the response headers and body content:
 
-- `application/json` responses are parsed with `JSON.parse`.
+- `application/json` and `application/*+json` responses are parsed with
+  `JSON.parse`. This includes vendor media types such as
+  `application/problem+json`.
 - `application/octet-stream` responses are read as `ArrayBuffer`.
 - Empty responses return `undefined`.
 - Other responses are read as text.

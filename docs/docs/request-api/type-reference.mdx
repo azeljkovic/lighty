@@ -270,22 +270,79 @@ interface Client<TDefaultResponse = unknown> {
 }
 ```
 
-## Related types
+## HttpMethod and compatibility types
 
-`types.ts` imports these public platform and library types:
+```ts
+type HttpMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "DELETE"
+  | "OPTIONS"
+  | "HEAD";
 
-| Type                  | Source        | Role                                                                                         |
-| --------------------- | ------------- | -------------------------------------------------------------------------------------------- |
-| `HttpMethod`          | lighty        | Restricts request methods to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, and `HEAD`. |
-| `RequestLoggerConfig` | lighty        | Configures built-in or custom logging.                                                       |
-| `HeadersInit`         | Fetch/Web API | Accepts the same header inputs as native `fetch`.                                            |
-| `AbortSignal`         | Fetch/Web API | Allows caller-driven cancellation and timeout composition.                                   |
-| `Response`            | Fetch/Web API | Exposes the raw fetch response on `RequestResult.response`.                                  |
+type Body = unknown;
+type BodyParseError = string | undefined;
+```
 
-## Error option types
+`HttpMethod` restricts `customRequest` to the request methods supported by
+lighty. `Body` and `BodyParseError` are exported compatibility utility types.
 
-These types mirror the public error fields and are useful when typing wrappers
-around request errors:
+## Logging types
+
+```ts
+type RequestLoggerLevel = "off" | "basic" | "verbose";
+type RequestLoggerConfig = RequestLoggerLevel | false | RequestLogger;
+
+interface RequestLogger {
+  level?: RequestLoggerLevel;
+  requestStart?: (entry: RequestStartLogEntry) => void | Promise<void>;
+  response?: (entry: ResponseLogEntry) => void | Promise<void>;
+  requestEnd?: (entry: RequestEndLogEntry) => void | Promise<void>;
+}
+```
+
+```ts
+interface RequestStartLogEntry<TBody = unknown> {
+  method: HttpMethod;
+  url: string;
+  headers: Record<string, string>;
+  body?: TBody;
+}
+
+interface ResponseLogEntry<TBody = unknown> {
+  method: HttpMethod;
+  url: string;
+  status: number;
+  statusText: string;
+  ok: boolean;
+  redirected: boolean;
+  type: ResponseType;
+  headers: Record<string, string>;
+  body: TBody;
+}
+
+interface RequestEndLogEntry {
+  method: HttpMethod;
+  url: string;
+  durationMs: number;
+  status?: number;
+  ok?: boolean;
+  error?: {
+    name?: string;
+    message: string;
+  };
+}
+```
+
+All logger values are redacted before they reach a hook. See [Errors and
+logging](./errors-and-logging#redaction) for the redaction rules and logging
+levels.
+
+## Error classes and option types
+
+These public classes and types describe the errors that lighty creates:
 
 ```ts
 interface HttpRequestErrorOptions<TBody = unknown> {
@@ -306,5 +363,35 @@ interface InvalidJsonResponseErrorOptions {
 }
 ```
 
-`Body` and `BodyParseError` are also exported as compatibility utility types.
-`Body` is `unknown`; `BodyParseError` is `string | undefined`.
+```ts
+class HttpRequestError<TBody = unknown> extends Error {
+  constructor(options: HttpRequestErrorOptions<TBody>);
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: TBody;
+  url: string;
+}
+
+class InvalidJsonResponseError extends Error {
+  constructor(options: InvalidJsonResponseErrorOptions);
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: string;
+  url: string;
+}
+```
+
+`InvalidJsonResponseError` also has the original parser error as its standard
+`Error.cause`. See [Failure behavior](./errors-and-logging#failure-behavior) for
+when these errors are thrown.
+
+## Platform types
+
+| Type | Role |
+| --- | --- |
+| `HeadersInit` | Accepts the same header inputs as native `fetch`: an object, tuple array, or `Headers`. |
+| `AbortSignal` | Enables caller-driven cancellation and timeout composition. |
+| `Response` | Exposes the raw Fetch response on `RequestResult.response`. |
+| `ResponseType` | Describes the native Fetch response type in `ResponseLogEntry`. |

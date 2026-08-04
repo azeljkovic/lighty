@@ -65,7 +65,8 @@ When a response is parsed as JSON and parsing fails, `lighty` throws `InvalidJso
 This happens when:
 
 - `responseType` is `"json"`, or
-- `responseType` is omitted and the `content-type` header includes `application/json`.
+- `responseType` is omitted and the media type is `application/json` or ends
+  in `+json`, such as `application/problem+json`.
 
 The error includes:
 
@@ -78,6 +79,26 @@ The error includes:
 
 `InvalidJsonResponseErrorOptions` is also exported for code that needs to type
 the constructor options. It includes the same fields as the error plus `cause`.
+
+## Failure behavior
+
+lighty only wraps HTTP status failures and invalid JSON. Other failures preserve
+their original error so callers can use the platform or application-specific
+error type.
+
+| Situation | Result | Logging behavior |
+| --- | --- | --- |
+| Non-OK response with `throwOnHttpError: false` (the default) | Resolves with `RequestResult`. | Normal completion hooks run. |
+| Non-OK response with `throwOnHttpError: true` | Rejects with `HttpRequestError` after parsing the body. | `requestEnd` receives an error summary. |
+| JSON parsing fails | Rejects with `InvalidJsonResponseError`. | `requestEnd` receives an error summary. |
+| Network failure, caller abort, or timeout | Rejects with the error from `fetch` or the abort mechanism; lighty does not wrap it. | `requestEnd` receives an error summary after a request has started. |
+| `responseParser` throws or rejects | Rejects with the original parser error. | `requestEnd` receives an error summary. |
+| `requestStart` logger hook throws or rejects | Rejects with the original hook error before `fetch` is called. | No `requestEnd` hook runs. |
+| `response` logger hook throws or rejects | Rejects with the original hook error. | `requestEnd` receives an error summary. |
+| `requestEnd` logger hook throws or rejects | Rejects with the original hook error; it can replace an earlier request error. | No later hook runs. |
+
+The `response` hook is only called for a verbose logger. See [Logger
+configuration](#logger-configuration) for the hook levels.
 
 ## Redirects
 
