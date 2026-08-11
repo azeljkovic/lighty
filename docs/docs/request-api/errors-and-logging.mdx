@@ -28,7 +28,7 @@ if (result.status === 404) {
 Set `throwOnHttpError: true` to throw `HttpRequestError` after the response body has been parsed:
 
 ```ts
-import {HttpRequestError, patchRequest} from "@azeljkovic/lighty";
+import { HttpRequestError, patchRequest } from "@azeljkovic/lighty";
 
 try {
   await patchRequest("https://api.example.test/users/1", {
@@ -111,12 +111,12 @@ type RequestLoggerConfig = RequestLoggerLevel | false | RequestLogger;
 
 Built-in levels:
 
-| Level | Behavior |
-| --- | --- |
-| `basic` | Logs request start and request completion. |
+| Level     | Behavior                                                             |
+| --------- | -------------------------------------------------------------------- |
+| `basic`   | Logs request start and request completion.                           |
 | `verbose` | Logs request start, parsed response details, and request completion. |
-| `off` | Disables logging. This is the default when `logger` is omitted. |
-| `false` | Also disables logging. |
+| `off`     | Disables logging. This is the default when `logger` is omitted.      |
+| `false`   | Also disables logging.                                               |
 
 Enable basic logging for a request:
 
@@ -160,15 +160,17 @@ import type {
 } from "@azeljkovic/lighty";
 ```
 
-| Hook | Entry type | Fields |
-| --- | --- | --- |
-| `requestStart` | `RequestStartLogEntry` | `method`, redacted `url`, redacted `headers`, and optional redacted `body`. |
-| `response` | `ResponseLogEntry` | Request fields plus `status`, `statusText`, `ok`, `redirected`, response `type`, redacted headers, and redacted body. |
-| `requestEnd` | `RequestEndLogEntry` | `method`, redacted `url`, `durationMs`, optional `status`, optional `ok`, and an optional error summary. |
+| Hook           | Entry type             | Fields                                                                                                                |
+| -------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `requestStart` | `RequestStartLogEntry` | `method`, redacted `url`, redacted `headers`, and optional redacted `body`.                                           |
+| `response`     | `ResponseLogEntry`     | Request fields plus `status`, `statusText`, `ok`, `redirected`, response `type`, redacted headers, and redacted body. |
+| `requestEnd`   | `RequestEndLogEntry`   | `method`, redacted `url`, `durationMs`, optional `status`, optional `ok`, and an optional error summary.              |
 
 `RequestLogger` exposes the optional `level`, `requestStart`, `response`, and
-`requestEnd` hooks. A custom logger emits `response` only when its level is
-`"verbose"`; `requestStart` and `requestEnd` run unless the level is `"off"`.
+`requestEnd` hooks. It can also expose `redactKeys` and `shouldRedact` to add
+application-specific rules. A custom logger emits `response` only when its
+level is `"verbose"`; `requestStart` and `requestEnd` run unless the level is
+`"off"`.
 
 ## Redaction
 
@@ -177,6 +179,28 @@ Before data reaches logger hooks, `lighty` redacts sensitive values from:
 - Header names containing terms such as `authorization`, `cookie`, `password`, `secret`, `session`, `token`, or `apiKey`.
 - Query parameter names containing sensitive terms.
 - Body object keys containing sensitive terms, recursively.
+- URL usernames, passwords, and fragments are always removed.
+- Opaque bodies such as strings, `FormData`, `URLSearchParams`, binary values, and streams are summarized instead of logged verbatim.
+
+Add rules for application-specific names or values with `redactKeys` and
+`shouldRedact`:
+
+```ts
+logger: {
+  redactKeys: ["accountNumber"],
+  shouldRedact: ({ source, key, path }) =>
+    source === "body" && key === "value" && path.includes("payment"),
+  requestStart: (entry) => auditLogger.info(entry),
+}
+```
+
+`shouldRedact` receives a `source` (`"body"`, `"header"`, or `"query"`), the
+field `key`, its `value`, and its path. It adds to the built-in rules; it cannot
+unredact a value selected by them.
+
+Redaction is heuristic convenience for observability, not a security boundary.
+Do not enable request logging for sensitive data unless the logger's destination,
+retention, and access controls are appropriate for it.
 
 The redacted value is:
 

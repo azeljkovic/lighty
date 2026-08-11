@@ -568,6 +568,80 @@ describe("requests", () => {
     assert.equal(requestEnd.error, undefined);
   });
 
+  it("removes URL credentials and fragments before logger hooks run", async (t) => {
+    const events = [];
+
+    t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
+
+    await customRequest({
+      method: "GET",
+      url: "https://alice:secret@example.test/users?token=query-secret#access_token=fragment-secret",
+      logger: {
+        requestStart: (entry) => events.push(entry),
+      },
+    });
+
+    assert.equal(events.length, 1);
+    assert.equal(events[0].url.includes("alice"), false);
+    assert.equal(events[0].url.includes("secret"), false);
+    assert.equal(events[0].url.includes("fragment"), false);
+    assert.equal(new URL(events[0].url).hash, "");
+    assert.equal(
+      new URL(events[0].url).searchParams.get("token"),
+      "[REDACTED]",
+    );
+  });
+
+  it("summarizes opaque bodies and supports custom redaction rules", async (t) => {
+    const events = [];
+
+    t.mock.method(
+      globalThis,
+      "fetch",
+      async () =>
+        new Response("account=alice&passcode=response-secret", {
+          headers: { "content-type": "text/plain" },
+        }),
+    );
+
+    await customRequest({
+      method: "POST",
+      url: "https://example.test/users?account=alice",
+      headers: { "x-account": "alice" },
+      body: "password=request-secret",
+      responseType: "text",
+      logger: {
+        level: "verbose",
+        redactKeys: ["account"],
+        shouldRedact: ({ source, key }) =>
+          source === "body" && key === "internalId",
+        requestStart: (entry) => events.push(["requestStart", entry]),
+        response: (entry) => events.push(["response", entry]),
+      },
+    });
+
+    assert.equal(events[0][1].url.includes("account=alice"), false);
+    assert.equal(events[0][1].headers["x-account"], "[REDACTED]");
+    assert.equal(events[0][1].body, "[String 23 chars]");
+    assert.equal(events[1][1].body, "[String 38 chars]");
+
+    await customRequest({
+      method: "POST",
+      url: "https://example.test/users",
+      body: { internalId: "internal-secret", visible: "ok" },
+      logger: {
+        shouldRedact: ({ source, key }) =>
+          source === "body" && key === "internalId",
+        requestStart: (entry) => events.push(["custom", entry]),
+      },
+    });
+
+    assert.deepEqual(events[2][1].body, {
+      internalId: "[REDACTED]",
+      visible: "ok",
+    });
+  });
+
   it("creates redacted entries only for enabled logger hooks", async (t) => {
     t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
 

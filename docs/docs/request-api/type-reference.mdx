@@ -279,6 +279,32 @@ interface Client {
 | `AbortSignal`         | Fetch/Web API | Allows caller-driven cancellation and timeout composition.                                   |
 | `Response`            | Fetch/Web API | Exposes the raw fetch response on `RequestResult.response`.                                  |
 
+## RequestLogger
+
+```ts
+interface RequestLogger {
+  level?: "off" | "basic" | "verbose";
+  redactKeys?: readonly string[];
+  shouldRedact?: (context: RequestLoggerRedactionContext) => boolean;
+  requestStart?: (entry: RequestStartLogEntry) => void | Promise<void>;
+  response?: (entry: ResponseLogEntry) => void | Promise<void>;
+  requestEnd?: (entry: RequestEndLogEntry) => void | Promise<void>;
+}
+
+interface RequestLoggerRedactionContext {
+  source: "body" | "header" | "query";
+  key?: string;
+  path: readonly string[];
+  value: unknown;
+}
+```
+
+`redactKeys` adds case-insensitive key-name matches. `shouldRedact` receives a
+body, header, or query context and can select additional values. URLs omit
+userinfo and fragments, and opaque bodies are summarized before hooks receive
+them. This heuristic redaction is not a security boundary; treat logging sinks
+as potentially sensitive.
+
 ## Error option types
 
 These types mirror the public error fields and are useful when typing wrappers
