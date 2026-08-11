@@ -473,7 +473,12 @@ await client.postRequest("/users", {
 });
 ```
 
-Logger entries redact sensitive header names, query parameters, and body keys containing words such as `authorization`, `cookie`, `password`, `secret`, `session`, `token`, and `apiKey`.
+Logger entries redact sensitive header names, query parameters, and body keys
+containing words such as `authorization`, `cookie`, `password`, `secret`,
+`session`, `token`, and `apiKey`. They also remove URL credentials and fragments
+and summarize opaque bodies such as strings and form data. Add project-specific
+rules with `redactKeys` or `shouldRedact`. This heuristic redaction is not a
+security boundary; use an appropriately secured logging destination.
 
 ## Example: Asserting Request Data
 

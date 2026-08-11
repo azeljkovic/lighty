@@ -21,8 +21,27 @@ type MaybePromise<T> = T | Promise<T>;
 export type RequestLoggerLevel = "off" | "basic" | "verbose";
 export type RequestLoggerConfig = RequestLoggerLevel | false | RequestLogger;
 
+export type RequestLoggerRedactionSource = "body" | "header" | "query";
+
+/** Context provided to a custom logger redaction rule. */
+export interface RequestLoggerRedactionContext {
+  source: RequestLoggerRedactionSource;
+  key?: string;
+  path: readonly string[];
+  value: unknown;
+}
+
+/** Return `true` to replace a value with `[REDACTED]` before it is logged. */
+export type RequestLoggerRedactionCallback = (
+  context: RequestLoggerRedactionContext,
+) => boolean;
+
 export interface RequestLogger {
   level?: RequestLoggerLevel;
+  /** Additional key names to redact, matched case-insensitively. */
+  redactKeys?: readonly string[];
+  /** Adds application-specific redaction rules to the built-in heuristics. */
+  shouldRedact?: RequestLoggerRedactionCallback;
   requestStart?: (entry: RequestStartLogEntry) => MaybePromise<void>;
   response?: (entry: ResponseLogEntry) => MaybePromise<void>;
   requestEnd?: (entry: RequestEndLogEntry) => MaybePromise<void>;
@@ -81,24 +100,37 @@ const DEFAULT_LOGGER_HOOKS: Omit<RequestLogger, "level"> = {
 
 export function redactHeaders(
   headers: Record<string, string>,
+  logger?: RequestLogger,
 ): Record<string, string> {
   return Object.fromEntries(
     Object.entries(headers).map(([key, value]) => [
       key,
-      isSensitiveHeaderKey(key) ? REDACTED : value,
+      shouldRedact(key, value, "header", [key], logger) ? REDACTED : value,
     ]),
   );
 }
 
-export function redactBody<TBody>(body: TBody): TBody {
-  return redactValue(body, new WeakSet<object>()) as TBody;
+export function redactBody<TBody>(body: TBody, logger?: RequestLogger): TBody {
+  return redactValue(body, new WeakSet<object>(), logger, []) as TBody;
 }
 
-export function redactUrl(url: URL): string {
+export function redactUrl(url: URL, logger?: RequestLogger): string {
   const redactedUrl = new URL(url);
 
+  redactedUrl.username = "";
+  redactedUrl.password = "";
+  redactedUrl.hash = "";
+
   for (const key of redactedUrl.searchParams.keys()) {
-    if (isSensitiveKey(key)) {
+    if (
+      shouldRedact(
+        key,
+        redactedUrl.searchParams.get(key),
+        "query",
+        [key],
+        logger,
+      )
+    ) {
       redactedUrl.searchParams.set(key, REDACTED);
     }
   }
@@ -152,7 +184,16 @@ export function toLogError(error: unknown): RequestEndLogEntry["error"] {
   };
 }
 
-function redactValue(value: unknown, seen: WeakSet<object>): unknown {
+function redactValue(
+  value: unknown,
+  seen: WeakSet<object>,
+  logger: RequestLogger | undefined,
+  path: readonly string[],
+): unknown {
+  if (typeof value === "string" && path.length === 0) {
+    return `[String ${value.length} chars]`;
+  }
+
   if (value == null || typeof value !== "object") {
     return value;
   }
@@ -167,6 +208,14 @@ function redactValue(value: unknown, seen: WeakSet<object>): unknown {
 
   if (value instanceof Blob) {
     return `[Blob ${value.size} bytes${value.type ? ` ${value.type}` : ""}]`;
+  }
+
+  if (value instanceof FormData) {
+    return `[FormData ${Array.from(value.keys()).length} entries]`;
+  }
+
+  if (value instanceof URLSearchParams) {
+    return `[URLSearchParams ${Array.from(value.keys()).length} entries]`;
   }
 
   if (isReadableStream(value)) {
@@ -184,13 +233,17 @@ function redactValue(value: unknown, seen: WeakSet<object>): unknown {
   seen.add(value);
 
   if (Array.isArray(value)) {
-    return value.map((childValue) => redactValue(childValue, seen));
+    return value.map((childValue, index) =>
+      redactValue(childValue, seen, logger, [...path, String(index)]),
+    );
   }
 
   return Object.fromEntries(
     Object.entries(value).map(([key, childValue]) => [
       key,
-      isSensitiveKey(key) ? REDACTED : redactValue(childValue, seen),
+      shouldRedact(key, childValue, "body", [...path, key], logger)
+        ? REDACTED
+        : redactValue(childValue, seen, logger, [...path, key]),
     ]),
   );
 }
@@ -201,19 +254,44 @@ function isReadableStream(value: object): value is ReadableStream {
   );
 }
 
-function isSensitiveKey(key: string) {
-  const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
+function shouldRedact(
+  key: string,
+  value: unknown,
+  source: RequestLoggerRedactionSource,
+  path: readonly string[],
+  logger: RequestLogger | undefined,
+) {
+  const normalizedKey = normalizeKey(key);
 
+  return (
+    hasCustomRedactKey(normalizedKey, logger) ||
+    ((source !== "header" || !NON_SENSITIVE_HEADER_KEYS.has(normalizedKey)) &&
+      isSensitiveKey(normalizedKey)) ||
+    logger?.shouldRedact?.({ source, key, path, value }) === true
+  );
+}
+
+function isSensitiveKey(normalizedKey: string) {
   return SENSITIVE_KEY_PARTS.some((part) => normalizedKey.includes(part));
 }
 
-function isSensitiveHeaderKey(key: string) {
-  const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
-
+function hasCustomRedactKey(
+  normalizedKey: string,
+  logger: RequestLogger | undefined,
+) {
   return (
-    !NON_SENSITIVE_HEADER_KEYS.has(normalizedKey) &&
-    SENSITIVE_KEY_PARTS.some((part) => normalizedKey.includes(part))
+    logger?.redactKeys?.some((redactKey) => {
+      const normalizedRedactKey = normalizeKey(redactKey);
+      return (
+        normalizedRedactKey.length > 0 &&
+        normalizedKey.includes(normalizedRedactKey)
+      );
+    }) === true
   );
+}
+
+function normalizeKey(key: string) {
+  return key.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 export function resolveLogger(

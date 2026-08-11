@@ -38,9 +38,9 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
 
   await logRequestStart(logger, () => ({
     method: config.method,
-    url: redactUrl(url),
-    headers: redactHeaders(headers),
-    ...(config.body == null ? {} : { body: redactBody(config.body) }),
+    url: redactUrl(url, logger),
+    headers: redactHeaders(headers, logger),
+    ...(config.body == null ? {} : { body: redactBody(config.body, logger) }),
   }));
 
   try {
@@ -67,7 +67,7 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
 
     await logResponse(logger, () => ({
       method: config.method,
-      url: redactUrl(url),
+      url: redactUrl(url, logger),
       status: fetchedResponse.status,
       statusText: fetchedResponse.statusText,
       ok: fetchedResponse.ok,
@@ -75,8 +75,9 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
       type: fetchedResponse.type,
       headers: redactHeaders(
         Object.fromEntries(fetchedResponse.headers.entries()),
+        logger,
       ),
-      body: redactBody(responseBody),
+      body: redactBody(responseBody, logger),
     }));
 
     if (!response.ok && config.throwOnHttpError === true) {
@@ -102,7 +103,7 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
   } finally {
     await logRequestEnd(logger, () => ({
       method: config.method,
-      url: redactUrl(url),
+      url: redactUrl(url, logger),
       durationMs: Date.now() - startedAt,
       status: response?.status,
       ok: response?.ok,
