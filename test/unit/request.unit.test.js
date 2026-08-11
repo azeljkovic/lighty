@@ -315,7 +315,7 @@ describe("requests", () => {
     assert.equal(new TextDecoder().decode(arrayBufferResult.data), "binary");
   });
 
-  it("returns and logs application/octet-stream responses as an ArrayBuffer", async (t) => {
+  it("returns application/octet-stream responses and logs an ArrayBuffer summary", async (t) => {
     const events = [];
 
     t.mock.method(
@@ -342,7 +342,7 @@ describe("requests", () => {
       new Uint8Array(result.data),
       Uint8Array.from([0, 1, 2, 255]),
     );
-    assert.deepEqual(events[0].body, Uint8Array.from([0, 1, 2, 255]));
+    assert.equal(events[0].body, "[ArrayBuffer 4 bytes]");
   });
 
   it("returns a Blob when responseType is blob", async (t) => {
@@ -566,6 +566,50 @@ describe("requests", () => {
     assert.equal(requestEnd.ok, true);
     assert.equal(typeof requestEnd.durationMs, "number");
     assert.equal(requestEnd.error, undefined);
+  });
+
+  it("creates redacted entries only for enabled logger hooks", async (t) => {
+    t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
+
+    const binary = new Uint8Array(1024 * 1024);
+    const cyclic = {};
+    cyclic.self = cyclic;
+
+    for (const logger of [undefined, false, "off"]) {
+      await customRequest({
+        method: "POST",
+        url: "https://example.test/upload",
+        body: binary,
+        responseParser: () => cyclic,
+        ...(logger === undefined ? {} : { logger }),
+      });
+    }
+  });
+
+  it("summarizes binary values and safely redacts cyclic logger bodies", async (t) => {
+    const events = [];
+    const cyclic = { token: "response-token" };
+    cyclic.self = cyclic;
+
+    t.mock.method(globalThis, "fetch", async () => jsonResponse({ ok: true }));
+
+    await customRequest({
+      method: "POST",
+      url: "https://example.test/upload",
+      body: new Uint8Array([1, 2, 3]),
+      responseParser: () => cyclic,
+      logger: {
+        level: "verbose",
+        requestStart: (entry) => events.push(["requestStart", entry]),
+        response: (entry) => events.push(["response", entry]),
+      },
+    });
+
+    assert.equal(events[0][1].body, "[Uint8Array 3 bytes]");
+    assert.deepEqual(events[1][1].body, {
+      token: "[REDACTED]",
+      self: "[Circular]",
+    });
   });
 
   it("uses basic logging by default when a logger is provided", async (t) => {

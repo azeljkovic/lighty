@@ -5,6 +5,7 @@ import {
   redactBody,
   redactHeaders,
   redactUrl,
+  resolveLogger,
   toLogError,
 } from "../utils/logger.js";
 import { HttpRequestError } from "./errors.js";
@@ -13,16 +14,13 @@ import {
   createRequestSignal,
   mergeHeaders,
 } from "./internals.js";
-import {
-  applyResponseParser,
-  getLogResponseBody,
-  parseResponseBody,
-} from "./response.js";
+import { applyResponseParser, parseResponseBody } from "./response.js";
 import type { RequestConfig, RequestResult } from "./types.js";
 
 export async function customRequest<TResponse = unknown, TBody = unknown>(
   config: RequestConfig<TBody, TResponse>,
 ): Promise<RequestResult<TResponse>> {
+  const logger = resolveLogger(config.logger);
   const url = buildRequestUrl(config.url, config.params);
   const requestBody = serializeRequestBody(config.body);
   const headers = mergeHeaders(
@@ -34,21 +32,19 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
   );
 
   const startedAt = Date.now();
-  const logUrl = redactUrl(url);
-  const logHeaders = redactHeaders(headers);
   let response: Response | undefined;
   let responseBody: TResponse | undefined;
   let requestError: unknown;
 
-  await logRequestStart(config.logger, {
+  await logRequestStart(logger, () => ({
     method: config.method,
-    url: logUrl,
-    headers: logHeaders,
+    url: redactUrl(url),
+    headers: redactHeaders(headers),
     ...(config.body == null ? {} : { body: redactBody(config.body) }),
-  });
+  }));
 
   try {
-    response = await fetch(url, {
+    const fetchedResponse = await fetch(url, {
       method: config.method,
       headers,
       body: requestBody.body,
@@ -56,29 +52,32 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
       redirect: config.redirect,
       signal: createRequestSignal(config.signal, config.timeoutMs),
     });
+    response = fetchedResponse;
 
     const parsedResponseBody = await parseResponseBody(
-      response,
+      fetchedResponse,
       url.toString(),
       config.responseType,
     );
     responseBody = await applyResponseParser(
       parsedResponseBody,
-      response,
+      fetchedResponse,
       config.responseParser,
     );
 
-    await logResponse(config.logger, {
+    await logResponse(logger, () => ({
       method: config.method,
-      url: logUrl,
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      redirected: response.redirected,
-      type: response.type,
-      headers: redactHeaders(Object.fromEntries(response.headers.entries())),
-      body: getLogResponseBody(responseBody, config.responseType),
-    });
+      url: redactUrl(url),
+      status: fetchedResponse.status,
+      statusText: fetchedResponse.statusText,
+      ok: fetchedResponse.ok,
+      redirected: fetchedResponse.redirected,
+      type: fetchedResponse.type,
+      headers: redactHeaders(
+        Object.fromEntries(fetchedResponse.headers.entries()),
+      ),
+      body: redactBody(responseBody),
+    }));
 
     if (!response.ok && config.throwOnHttpError === true) {
       throw new HttpRequestError<TResponse>({
@@ -101,16 +100,16 @@ export async function customRequest<TResponse = unknown, TBody = unknown>(
     requestError = error;
     throw error;
   } finally {
-    await logRequestEnd(config.logger, {
+    await logRequestEnd(logger, () => ({
       method: config.method,
-      url: logUrl,
+      url: redactUrl(url),
       durationMs: Date.now() - startedAt,
       status: response?.status,
       ok: response?.ok,
       ...(requestError === undefined
         ? {}
         : { error: toLogError(requestError) }),
-    });
+    }));
   }
 }
 

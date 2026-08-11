@@ -1,4 +1,3 @@
-import { redactBody } from "../utils/logger.js";
 import { InvalidJsonResponseError } from "./errors.js";
 import type { RequestResponseType, ResponseParserHook } from "./types.js";
 
@@ -78,23 +77,4 @@ function isJsonContentType(contentType: string): boolean {
   const mediaType = contentType.split(";", 1)[0].trim().toLowerCase();
 
   return mediaType === "application/json" || mediaType.endsWith("+json");
-}
-
-export function getLogResponseBody<TResponse>(
-  body: TResponse,
-  responseType?: RequestResponseType,
-): unknown {
-  if (body instanceof ArrayBuffer) {
-    return new Uint8Array(body);
-  }
-
-  if (body instanceof Blob) {
-    return `[Blob ${body.size} bytes${body.type ? ` ${body.type}` : ""}]`;
-  }
-
-  if (responseType === "stream" && body != null) {
-    return "[ReadableStream]";
-  }
-
-  return redactBody(body);
 }

@@ -91,7 +91,7 @@ export function redactHeaders(
 }
 
 export function redactBody<TBody>(body: TBody): TBody {
-  return redactValue(body) as TBody;
+  return redactValue(body, new WeakSet<object>()) as TBody;
 }
 
 export function redactUrl(url: URL): string {
@@ -107,42 +107,36 @@ export function redactUrl(url: URL): string {
 }
 
 export async function logRequestStart(
-  logger: RequestLoggerConfig | undefined,
-  entry: RequestStartLogEntry,
+  logger: RequestLogger | undefined,
+  createEntry: () => RequestStartLogEntry,
 ) {
-  const activeLogger = getActiveLogger(logger);
-
-  if (!activeLogger || !shouldLogBasic(activeLogger)) {
+  if (!logger || !shouldLogBasic(logger) || !logger.requestStart) {
     return;
   }
 
-  await activeLogger.requestStart?.(entry);
+  await logger.requestStart(createEntry());
 }
 
 export async function logResponse(
-  logger: RequestLoggerConfig | undefined,
-  entry: ResponseLogEntry,
+  logger: RequestLogger | undefined,
+  createEntry: () => ResponseLogEntry,
 ) {
-  const activeLogger = getActiveLogger(logger);
-
-  if (!activeLogger || !shouldLogFull(activeLogger)) {
+  if (!logger || !shouldLogFull(logger) || !logger.response) {
     return;
   }
 
-  await activeLogger.response?.(entry);
+  await logger.response(createEntry());
 }
 
 export async function logRequestEnd(
-  logger: RequestLoggerConfig | undefined,
-  entry: RequestEndLogEntry,
+  logger: RequestLogger | undefined,
+  createEntry: () => RequestEndLogEntry,
 ) {
-  const activeLogger = getActiveLogger(logger);
-
-  if (!activeLogger || !shouldLogBasic(activeLogger)) {
+  if (!logger || !shouldLogBasic(logger) || !logger.requestEnd) {
     return;
   }
 
-  await activeLogger.requestEnd?.(entry);
+  await logger.requestEnd(createEntry());
 }
 
 export function toLogError(error: unknown): RequestEndLogEntry["error"] {
@@ -158,24 +152,52 @@ export function toLogError(error: unknown): RequestEndLogEntry["error"] {
   };
 }
 
-function redactValue(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(redactValue);
-  }
-
+function redactValue(value: unknown, seen: WeakSet<object>): unknown {
   if (value == null || typeof value !== "object") {
     return value;
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return `[ArrayBuffer ${value.byteLength} bytes]`;
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    return `[${value.constructor.name} ${value.byteLength} bytes]`;
+  }
+
+  if (value instanceof Blob) {
+    return `[Blob ${value.size} bytes${value.type ? ` ${value.type}` : ""}]`;
+  }
+
+  if (isReadableStream(value)) {
+    return "[ReadableStream]";
   }
 
   if (value instanceof Date) {
     return value;
   }
 
+  if (seen.has(value)) {
+    return "[Circular]";
+  }
+
+  seen.add(value);
+
+  if (Array.isArray(value)) {
+    return value.map((childValue) => redactValue(childValue, seen));
+  }
+
   return Object.fromEntries(
     Object.entries(value).map(([key, childValue]) => [
       key,
-      isSensitiveKey(key) ? REDACTED : redactValue(childValue),
+      isSensitiveKey(key) ? REDACTED : redactValue(childValue, seen),
     ]),
+  );
+}
+
+function isReadableStream(value: object): value is ReadableStream {
+  return (
+    typeof ReadableStream !== "undefined" && value instanceof ReadableStream
   );
 }
 
@@ -194,7 +216,7 @@ function isSensitiveHeaderKey(key: string) {
   );
 }
 
-function getActiveLogger(
+export function resolveLogger(
   logger: RequestLoggerConfig | undefined,
 ): RequestLogger | undefined {
   if (logger === undefined || logger === false || logger === "off") {
