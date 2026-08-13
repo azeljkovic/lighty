@@ -3,6 +3,7 @@ import {
   assertionErrorWithCause,
   formatThrown,
   formatValue,
+  isThenable,
 } from "./format.js";
 import { getResponse, type ResponseAssertionTarget } from "./targets.js";
 
@@ -90,6 +91,11 @@ export function headerSatisfies(
       stackStartFn: headerSatisfies,
     });
   }
+
+  assert.ok(
+    !isThenable(passed),
+    `Response header "${headerName}" predicate must be synchronous; received a thenable`,
+  );
 
   assert.ok(
     passed,

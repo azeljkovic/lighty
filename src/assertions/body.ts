@@ -5,6 +5,7 @@ import {
   assertionErrorWithCause,
   formatThrown,
   formatValue,
+  isThenable,
 } from "./format.js";
 import { getBody, getResponse, type BodyAssertionTarget } from "./targets.js";
 
@@ -261,6 +262,11 @@ export function bodyArrayContainsItemMatching<TItem = unknown>(
       });
     }
 
+    assert.ok(
+      !isThenable(passed),
+      `Response body array predicate must be synchronous; received a thenable at index ${index}`,
+    );
+
     if (passed) {
       return;
     }
@@ -386,6 +392,11 @@ export function bodyMatches<TBody>(
     });
   }
 
+  assert.ok(
+    !isThenable(passed),
+    "Response body predicate must be synchronous; received a thenable",
+  );
+
   assert.ok(passed, `${message}; received ${formatValue(body)}`);
 }
 
@@ -429,28 +440,51 @@ function bytesFromArrayBuffer(body: unknown): Uint8Array {
   return new Uint8Array(body);
 }
 
-function deepPartialMatches(actual: unknown, expectedPartial: unknown): boolean {
-  if (isObjectBody(expectedPartial)) {
-    if (!isObjectBody(actual)) {
-      return false;
-    }
-
-    return Object.entries(expectedPartial).every(([key, expectedValue]) =>
-      deepPartialMatches(actual[key], expectedValue),
-    );
-  }
-
+function deepPartialMatches(
+  actual: unknown,
+  expectedPartial: unknown,
+): boolean {
   if (Array.isArray(expectedPartial)) {
     if (!Array.isArray(actual) || actual.length < expectedPartial.length) {
       return false;
     }
 
-    return expectedPartial.every((expectedItem, index) =>
-      deepPartialMatches(actual[index], expectedItem),
+    const actualArray = actual as unknown as Record<PropertyKey, unknown>;
+    const expectedArray = expectedPartial as unknown as Record<
+      PropertyKey,
+      unknown
+    >;
+    return Reflect.ownKeys(expectedPartial)
+      .filter((key) => key !== "length")
+      .every(
+        (key) =>
+          Object.hasOwn(actual, key) &&
+          deepPartialMatches(actualArray[key], expectedArray[key]),
+      );
+  }
+
+  if (isPlainObject(expectedPartial)) {
+    if (!isPlainObject(actual)) {
+      return false;
+    }
+
+    return Reflect.ownKeys(expectedPartial).every(
+      (key) =>
+        Object.hasOwn(actual, key) &&
+        deepPartialMatches(actual[key], expectedPartial[key]),
     );
   }
 
-  return Object.is(actual, expectedPartial);
+  return isDeepStrictEqual(actual, expectedPartial);
+}
+
+function isPlainObject(value: unknown): value is Record<PropertyKey, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 function getValueAtPath(body: unknown, pathParts: readonly PathPart[]): unknown {

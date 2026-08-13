@@ -52,8 +52,9 @@ for global or sticky patterns:
 lightyAssert.headerMatches(result, "x-request-id", /^request-\d+$/);
 ```
 
-For checks that do not fit an exact value or pattern, pass a predicate. If the
-predicate throws, lighty preserves that error as the assertion error's `cause`.
+For checks that do not fit an exact value or pattern, pass a synchronous
+predicate. A returned Promise or thenable fails the assertion. If the predicate
+throws, lighty preserves that error as the assertion error's `cause`.
 
 ```ts
 lightyAssert.headerSatisfies(
@@ -63,4 +64,3 @@ lightyAssert.headerSatisfies(
   "Expected cache-control to set a max age",
 );
 ```
-
