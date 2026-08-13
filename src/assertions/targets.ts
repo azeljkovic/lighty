@@ -10,7 +10,7 @@ export function getResponse(response: ResponseAssertionTarget): Response {
     "Expected response assertion target to be a Response or a request result",
   );
 
-  const actual = "response" in response ? response.response : response;
+  const actual = isRequestResult(response) ? response.response : response;
 
   assert.ok(
     isResponseLike(actual),
@@ -28,10 +28,16 @@ function isRequestResult<TBody>(
   value: BodyAssertionTarget<TBody>,
 ): value is RequestResult<TBody> {
   return (
-    typeof value === "object" &&
-    value !== null &&
+    isObjectLike(value) &&
     "response" in value &&
-    "data" in value
+    isResponseLike(value.response) &&
+    "data" in value &&
+    "status" in value &&
+    typeof value.status === "number" &&
+    "ok" in value &&
+    typeof value.ok === "boolean" &&
+    "headers" in value &&
+    isHeadersRecord(value.headers)
   );
 }
 
@@ -62,5 +68,13 @@ function isHeadersLike(value: unknown): value is Headers {
     typeof value.has === "function" &&
     "get" in value &&
     typeof value.get === "function"
+  );
+}
+
+function isHeadersRecord(value: unknown): value is Record<string, string> {
+  return (
+    isObjectLike(value) &&
+    !Array.isArray(value) &&
+    Object.values(value).every((header) => typeof header === "string")
   );
 }

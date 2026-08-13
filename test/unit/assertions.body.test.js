@@ -131,6 +131,14 @@ describe("body assertions", () => {
     lightyAssert.bodyMatches({ enabled: true }, (body) => body.enabled);
   });
 
+  it("does not unwrap raw bodies that happen to contain response and data", () => {
+    const body = { response: "ok", data: { id: 1 }, id: 99 };
+
+    lightyAssert.bodyEquals(body, body);
+    lightyAssert.bodyHasProperty(body, "id", 99);
+    lightyAssert.bodyPathEquals(body, "data.id", 1);
+  });
+
   it("throws for mismatched object bodies", () => {
     const result = makeResult(200, { id: 1, name: "Ada" });
 
