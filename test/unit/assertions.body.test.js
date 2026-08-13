@@ -164,6 +164,46 @@ describe("body assertions", () => {
     );
   });
 
+  it("requires partial body properties to be own properties", () => {
+    assert.throws(
+      () => lightyAssert.bodyContains({}, { missing: undefined }),
+      /did not contain the expected partial body/,
+    );
+
+    assert.throws(
+      () => lightyAssert.bodyContains(Object.create({ id: 1 }), { id: 1 }),
+      /did not contain the expected partial body/,
+    );
+  });
+
+  it("partially matches arrays and deeply compares non-plain objects", () => {
+    lightyAssert.bodyContains([{ id: 1 }, { id: 2 }], [{ id: 1 }]);
+
+    assert.throws(
+      () =>
+        lightyAssert.bodyContains(
+          new Date("2024-01-01T00:00:00.000Z"),
+          new Date("2025-01-01T00:00:00.000Z"),
+        ),
+      /did not contain the expected partial body/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyContains(new Map([["id", 1]]), new Map([["id", 2]])),
+      /did not contain the expected partial body/,
+    );
+  });
+
+  it("matches symbol and non-enumerable partial properties", () => {
+    const key = Symbol("internal");
+    const actual = { [key]: { enabled: true } };
+    const expected = { [key]: { enabled: true } };
+    Object.defineProperty(actual, "hidden", { value: "present" });
+    Object.defineProperty(expected, "hidden", { value: "present" });
+
+    lightyAssert.bodyContains(actual, expected);
+  });
+
   it("wraps body predicate exceptions with context", () => {
     const result = makeResult(200, { id: 1, name: "Ada" });
 
@@ -195,6 +235,21 @@ describe("body assertions", () => {
         assert.equal(error.cause.name, "TypeError");
         return true;
       },
+    );
+  });
+
+  it("rejects asynchronous body predicates", () => {
+    assert.throws(
+      () => lightyAssert.bodyMatches({ id: 1 }, async () => false),
+      /Response body predicate must be synchronous; received a thenable/,
+    );
+    assert.throws(
+      () =>
+        lightyAssert.bodyArrayContainsItemMatching(
+          [{ id: 1 }],
+          async () => false,
+        ),
+      /Response body array predicate must be synchronous; received a thenable at index 0/,
     );
   });
 

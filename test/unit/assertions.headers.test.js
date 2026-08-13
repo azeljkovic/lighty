@@ -88,6 +88,18 @@ describe("header assertions", () => {
     );
   });
 
+  it("rejects asynchronous header predicates", () => {
+    assert.throws(
+      () =>
+        lightyAssert.headerSatisfies(
+          makeResult(200, undefined, { "content-type": "text/plain" }),
+          "content-type",
+          async () => false,
+        ),
+      /Response header "content-type" predicate must be synchronous; received a thenable/,
+    );
+  });
+
   it("throws assertion failures for invalid header response targets", () => {
     assert.throws(() => lightyAssert.headerExists(null, "x-request-id"), {
       name: "AssertionError",

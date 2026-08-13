@@ -18,6 +18,14 @@ export function formatThrown(error: unknown): string {
   return formatValue(error);
 }
 
+export function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return (
+    (typeof value === "object" || typeof value === "function") &&
+    value !== null &&
+    typeof (value as { then?: unknown }).then === "function"
+  );
+}
+
 export function assertionErrorWithCause(
   options: assert.AssertionErrorOptions & { cause: unknown },
 ): assert.AssertionError & { cause: unknown } {
