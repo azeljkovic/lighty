@@ -53,9 +53,7 @@
     "test": "pnpm run build && node --test test/unit/*.test.js test/integration/*.test.js",
     "test:unit": "pnpm run build && node --test test/unit/*.test.js",
     "test:integration": "pnpm run build && node --test test/integration/*.test.js",
-    "test:examples-all": "pnpm run build && node --test examples/*.test.js",
-    "test:package": "node --test test/package-smoke.test.js",
-    "test:examples": "pnpm run build && node --test examples/*.test.js"
+    "test:package": "node --test test/package-smoke.test.js"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.0",
